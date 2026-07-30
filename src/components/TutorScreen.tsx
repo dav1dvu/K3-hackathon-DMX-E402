@@ -1,12 +1,14 @@
 import { Document, Page, pdfjs } from "react-pdf";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import type { ChatMessage, PdfSource } from "../types";
+import type { ChatMessage, DocumentKnowledge, IngestionProgress, PdfSource, QueryScope } from "../types";
 import { ChatPanel } from "./ChatPanel";
 import { FileIcon, MenuIcon, RotateIcon, SparkleIcon } from "./icons";
 import { SlideNavigation } from "./SlideNavigation";
 import { SlideViewer } from "./SlideViewer";
 import { ThumbnailSidebar } from "./ThumbnailSidebar";
+import { KnowledgePanel } from "./KnowledgePanel";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -18,13 +20,18 @@ type TutorScreenProps = {
   pdfSource: PdfSource | null;
   currentPage: number;
   totalPages: number;
-  currentPageMessages: ChatMessage[];
+  messages: ChatMessage[];
   question: string;
+  scope: QueryScope;
   isBotTyping: boolean;
-  onDocumentLoad: (totalPages: number) => void;
+  knowledge: DocumentKnowledge | null;
+  ingestionProgress: IngestionProgress | null;
+  ingestionError: string;
+  onDocumentLoad: (pdf: PDFDocumentProxy) => void;
   onSelectPage: (pageNumber: number) => void;
   onPrevious: () => void;
   onNext: () => void;
+  onScopeChange: (scope: QueryScope) => void;
   onQuestionChange: (value: string) => void;
   onSendQuestion: (question: string) => void;
   onReset: () => void;
@@ -58,13 +65,18 @@ export function TutorScreen({
   pdfSource,
   currentPage,
   totalPages,
-  currentPageMessages,
+  messages,
   question,
+  scope,
   isBotTyping,
+  knowledge,
+  ingestionProgress,
+  ingestionError,
   onDocumentLoad,
   onSelectPage,
   onPrevious,
   onNext,
+  onScopeChange,
   onQuestionChange,
   onSendQuestion,
   onReset,
@@ -95,7 +107,7 @@ export function TutorScreen({
         file={pdfSource}
         loading={<DocumentLoading />}
         error={<DocumentError onReset={onReset} />}
-        onLoadSuccess={(pdf) => onDocumentLoad(pdf.numPages)}
+        onLoadSuccess={onDocumentLoad}
       >
         <div className="learning-layout">
           <ThumbnailSidebar
@@ -105,6 +117,7 @@ export function TutorScreen({
             PageComponent={Page}
           />
           <div className="viewer-column">
+            <KnowledgePanel knowledge={knowledge} progress={ingestionProgress} error={ingestionError} />
             <SlideViewer pageNumber={currentPage} PageComponent={Page} />
             <SlideNavigation
               currentPage={currentPage}
@@ -115,9 +128,13 @@ export function TutorScreen({
           </div>
           <ChatPanel
             pageNumber={currentPage}
-            messages={currentPageMessages}
+            messages={messages}
             question={question}
+            scope={scope}
             isBotTyping={isBotTyping}
+            isKnowledgeReady={Boolean(knowledge)}
+            ingestionFailed={Boolean(ingestionError)}
+            onScopeChange={onScopeChange}
             onQuestionChange={onQuestionChange}
             onSend={onSendQuestion}
           />

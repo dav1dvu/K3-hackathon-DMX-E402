@@ -11,9 +11,28 @@ vi.mock("react-pdf", async () => {
     onLoadSuccess,
   }: {
     children: ReactNode;
-    onLoadSuccess?: (pdf: { numPages: number }) => void;
+    onLoadSuccess?: (pdf: {
+      numPages: number;
+      getPage: (pageNumber: number) => Promise<{
+        getTextContent: () => Promise<{ items: Array<{ str: string; hasEOL: boolean }> }>;
+        getOperatorList: () => Promise<{ fnArray: number[] }>;
+      }>;
+    }) => void;
   }) {
-    React.useEffect(() => onLoadSuccess?.({ numPages: 5 }), [onLoadSuccess]);
+    React.useEffect(() => {
+      onLoadSuccess?.({
+        numPages: 5,
+        getPage: async (pageNumber) => ({
+          getTextContent: async () => ({
+            items: [{
+              str: `Trang ${pageNumber} trình bày machine learning, dữ liệu huấn luyện và cách đánh giá mô hình bằng precision và recall.`,
+              hasEOL: false,
+            }],
+          }),
+          getOperatorList: async () => ({ fnArray: [] }),
+        }),
+      });
+    }, [onLoadSuccess]);
     return <div data-testid="pdf-document">{children}</div>;
   }
 
@@ -34,7 +53,10 @@ vi.mock("react-pdf", async () => {
   return {
     Document,
     Page,
-    pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
+    pdfjs: {
+      GlobalWorkerOptions: { workerSrc: "" },
+      OPS: { paintImageXObject: 1, paintInlineImageXObject: 2, paintImageMaskXObject: 3 },
+    },
   };
 });
 
@@ -52,6 +74,10 @@ describe("AI PDF Tutor MVP", () => {
     fireEvent.click(screen.getByRole("button", { name: /dùng tài liệu mẫu/i }));
     expect(screen.getByText(/đang xử lý tài liệu/i)).toBeInTheDocument();
     await act(async () => vi.advanceTimersByTime(1000));
+    await act(async () => {
+      for (let index = 0; index < 30; index += 1) await Promise.resolve();
+    });
+    expect(screen.getByText(/đã lập index 5 trang/i)).toBeInTheDocument();
   }
 
   it("rejects a non-PDF file", () => {
@@ -84,13 +110,23 @@ describe("AI PDF Tutor MVP", () => {
     expect(screen.getByText(/trợ lý đang trả lời/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /trang tiếp theo/i }));
-    expect(screen.getByText(/gắn với trang 2 tại thời điểm gửi/i)).toBeInTheDocument();
+    expect(screen.getByText(/chỉ dùng bằng chứng từ trang 2/i)).toBeInTheDocument();
     await act(async () => vi.advanceTimersByTime(800));
 
     fireEvent.click(screen.getByRole("button", { name: /trang trước/i }));
-    expect(screen.getByText(/theo nội dung đang hiển thị ở trang 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/nguồn ngữ cảnh · trang 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/trang 1 trình bày machine learning/i, { selector: ".chat-message.assistant p" })).toBeInTheDocument();
+    expect(screen.getByText(/nguồn · trang 1/i)).toBeInTheDocument();
     expect(screen.getByText("Tóm tắt trang này.")).toBeInTheDocument();
+  });
+
+  it("switches to whole-lesson retrieval and cites multiple pages", async () => {
+    await openSampleDocument();
+    fireEvent.click(screen.getByRole("button", { name: /toàn bộ bài/i }));
+    const input = screen.getByLabelText(/câu hỏi về toàn bộ bài học/i);
+    fireEvent.change(input, { target: { value: "Toàn bài nói gì về precision và recall?" } });
+    fireEvent.click(screen.getByRole("button", { name: /gửi câu hỏi/i }));
+    await act(async () => vi.advanceTimersByTime(800));
+    expect(screen.getByText(/nguồn · trang 1, 2, 3, 4/i)).toBeInTheDocument();
   });
 
   it("resets the PDF and all page chat state", async () => {

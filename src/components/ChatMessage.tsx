@@ -11,7 +11,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <div>
         <span className="message-author">{isAssistant ? "Slidewise" : "Bạn"}</span>
         <p>{message.content}</p>
-        {isAssistant && <span className="message-source">Nguồn ngữ cảnh · Trang {message.pageNumber}</span>}
+        {isAssistant && message.insufficientContext && <span className="insufficient-label">Chưa đủ dữ liệu trong tài liệu</span>}
+        {isAssistant && message.sourcePages && message.sourcePages.length > 0 && (
+          <span className="message-source">Nguồn · Trang {message.sourcePages.join(", ")}</span>
+        )}
       </div>
     </article>
   );

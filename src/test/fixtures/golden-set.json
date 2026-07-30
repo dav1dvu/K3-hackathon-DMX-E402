@@ -1,0 +1,29 @@
+{
+  "pages": [
+    {
+      "pageNumber": 1,
+      "title": "Neural networks",
+      "sourceType": "pdf_text",
+      "content": "Neural networks learn layered representations from training data. Input features flow through hidden layers to an output layer."
+    },
+    {
+      "pageNumber": 2,
+      "title": "Confusion matrix",
+      "sourceType": "ocr",
+      "content": "A confusion matrix compares predicted labels with actual labels using true positives, false positives, true negatives and false negatives."
+    },
+    {
+      "pageNumber": 3,
+      "title": "Precision and recall",
+      "sourceType": "pdf_text",
+      "content": "Precision measures correct positive predictions while recall measures how many actual positives were found."
+    }
+  ],
+  "questions": [
+    { "id": "current-text", "question": "Neural networks học như thế nào?", "scope": "current_page", "currentPage": 1, "expectedPages": [1], "insufficientContext": false },
+    { "id": "current-ocr", "question": "Confusion matrix so sánh những nhãn nào?", "scope": "current_page", "currentPage": 2, "expectedPages": [2], "insufficientContext": false },
+    { "id": "whole-lesson", "question": "Toàn bài nói gì về precision và confusion matrix?", "scope": "whole_lesson", "currentPage": 1, "expectedPages": [2, 3], "insufficientContext": false },
+    { "id": "compare-pages", "question": "So sánh trang 1 và trang 2", "scope": "whole_lesson", "currentPage": 1, "expectedPages": [1, 2], "insufficientContext": false },
+    { "id": "missing-answer", "question": "Tài liệu nói gì về quantum entanglement?", "scope": "whole_lesson", "currentPage": 1, "expectedPages": [], "insufficientContext": true }
+  ]
+}

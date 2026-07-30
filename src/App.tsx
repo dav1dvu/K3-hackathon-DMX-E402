@@ -1,7 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { TutorScreen } from "./components/TutorScreen";
 import { UploadScreen } from "./components/UploadScreen";
-import type { AppScreen, ChatMessage, PdfSource } from "./types";
+import { answerFromDocument } from "./rag/grounding";
+import { ingestPdfDocument } from "./rag/ingestion";
+import type {
+  AppScreen,
+  ChatMessage,
+  DocumentKnowledge,
+  IngestionProgress,
+  PdfSource,
+  QueryScope,
+} from "./types";
 
 const PROCESSING_DELAY_MS = 1000;
 const BOT_TYPING_DELAY_MS = 800;
@@ -12,8 +22,8 @@ function createMessageId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function buildMockAnswer(pageNumber: number, question: string) {
-  return `Theo nội dung đang hiển thị ở trang ${pageNumber}, đây là câu trả lời mô phỏng cho câu hỏi “${question}”. Bạn có thể đối chiếu trực tiếp với phần văn bản trên trang này.`;
+function conversationKey(scope: QueryScope, pageNumber: number) {
+  return scope === "whole_lesson" ? "whole_lesson" : `current_page:${pageNumber}`;
 }
 
 export default function App() {
@@ -23,19 +33,28 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [scope, setScope] = useState<QueryScope>("current_page");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
-  const [typingPages, setTypingPages] = useState<number[]>([]);
+  const [typingKeys, setTypingKeys] = useState<string[]>([]);
+  const [knowledge, setKnowledge] = useState<DocumentKnowledge | null>(null);
+  const [ingestionProgress, setIngestionProgress] = useState<IngestionProgress | null>(null);
+  const [ingestionError, setIngestionError] = useState("");
   const timeoutsRef = useRef<number[]>([]);
+  const ingestionRunRef = useRef(0);
 
-  const currentPageMessages = useMemo(
-    () => messages.filter((message) => message.pageNumber === currentPage),
-    [currentPage, messages],
+  const activeConversationKey = conversationKey(scope, currentPage);
+  const activeMessages = useMemo(
+    () => messages.filter((message) => (
+      message.scope === scope && (scope === "whole_lesson" || message.pageNumber === currentPage)
+    )),
+    [currentPage, messages, scope],
   );
 
   useEffect(
     () => () => {
       timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      ingestionRunRef.current += 1;
     },
     [],
   );
@@ -43,6 +62,9 @@ export default function App() {
   const startDocument = (name: string, source: PdfSource) => {
     setPdfSource(source);
     setDocumentName(name);
+    setKnowledge(null);
+    setIngestionError("");
+    setIngestionProgress(null);
     setIsProcessing(true);
     const timeoutId = window.setTimeout(() => {
       setIsProcessing(false);
@@ -51,34 +73,69 @@ export default function App() {
     timeoutsRef.current.push(timeoutId);
   };
 
+  const handleDocumentLoad = useCallback(async (pdf: PDFDocumentProxy) => {
+    const runId = ++ingestionRunRef.current;
+    setTotalPages(pdf.numPages);
+    setCurrentPage((page) => Math.min(page, pdf.numPages));
+    setIngestionError("");
+    try {
+      const nextKnowledge = await ingestPdfDocument(pdf, documentName, {
+        onProgress: (progress) => {
+          if (ingestionRunRef.current === runId) setIngestionProgress(progress);
+        },
+      });
+      if (ingestionRunRef.current === runId) setKnowledge(nextKnowledge);
+    } catch (error) {
+      console.error("Document ingestion failed", error);
+      if (ingestionRunRef.current === runId) {
+        setIngestionError("Không thể phân tích đầy đủ tài liệu. Hãy thử lại với file PDF khác.");
+      }
+    }
+  }, [documentName]);
+
   const selectPage = (pageNumber: number) => {
     setCurrentPage(pageNumber);
     setQuestion("");
   };
 
+  const handleScopeChange = (nextScope: QueryScope) => {
+    setScope(nextScope);
+    setQuestion("");
+  };
+
   const handleSendQuestion = (submittedQuestion: string) => {
+    if (!knowledge) return;
     const pageAtSendTime = currentPage;
+    const scopeAtSendTime = scope;
+    const keyAtSendTime = conversationKey(scopeAtSendTime, pageAtSendTime);
     const userMessage: ChatMessage = {
       id: createMessageId("user"),
       pageNumber: pageAtSendTime,
+      scope: scopeAtSendTime,
       role: "user",
       content: submittedQuestion,
     };
     setMessages((previous) => [...previous, userMessage]);
     setQuestion("");
-    setTypingPages((previous) => [...previous, pageAtSendTime]);
+    setTypingKeys((previous) => [...previous, keyAtSendTime]);
 
     const timeoutId = window.setTimeout(() => {
+      const groundedAnswer = answerFromDocument(knowledge.index, {
+        question: submittedQuestion,
+        scope: scopeAtSendTime,
+        currentPage: pageAtSendTime,
+      });
       const assistantMessage: ChatMessage = {
         id: createMessageId("assistant"),
         pageNumber: pageAtSendTime,
+        scope: scopeAtSendTime,
         role: "assistant",
-        content: buildMockAnswer(pageAtSendTime, submittedQuestion),
+        content: groundedAnswer.answer,
+        sourcePages: groundedAnswer.sourcePages,
+        insufficientContext: groundedAnswer.insufficientContext,
       };
       setMessages((previous) => [...previous, assistantMessage]);
-      setTypingPages((previous) =>
-        previous.filter((pageNumber) => pageNumber !== pageAtSendTime),
-      );
+      setTypingKeys((previous) => previous.filter((key) => key !== keyAtSendTime));
     }, BOT_TYPING_DELAY_MS);
     timeoutsRef.current.push(timeoutId);
   };
@@ -86,15 +143,20 @@ export default function App() {
   const resetApplication = () => {
     timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     timeoutsRef.current = [];
+    ingestionRunRef.current += 1;
     setScreen("upload");
     setPdfSource(null);
     setDocumentName("");
     setIsProcessing(false);
     setCurrentPage(1);
     setTotalPages(0);
+    setScope("current_page");
     setMessages([]);
     setQuestion("");
-    setTypingPages([]);
+    setTypingKeys([]);
+    setKnowledge(null);
+    setIngestionProgress(null);
+    setIngestionError("");
   };
 
   if (screen === "upload") {
@@ -114,16 +176,18 @@ export default function App() {
       pdfSource={pdfSource}
       currentPage={currentPage}
       totalPages={totalPages}
-      currentPageMessages={currentPageMessages}
+      messages={activeMessages}
       question={question}
-      isBotTyping={typingPages.includes(currentPage)}
-      onDocumentLoad={(pageCount) => {
-        setTotalPages(pageCount);
-        setCurrentPage((page) => Math.min(page, pageCount));
-      }}
+      scope={scope}
+      isBotTyping={typingKeys.includes(activeConversationKey)}
+      knowledge={knowledge}
+      ingestionProgress={ingestionProgress}
+      ingestionError={ingestionError}
+      onDocumentLoad={handleDocumentLoad}
       onSelectPage={selectPage}
       onPrevious={() => selectPage(Math.max(1, currentPage - 1))}
       onNext={() => selectPage(Math.min(totalPages, currentPage + 1))}
+      onScopeChange={handleScopeChange}
       onQuestionChange={setQuestion}
       onSendQuestion={handleSendQuestion}
       onReset={resetApplication}

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const categories = ["normal_grounded", "missing_information", "ambiguous_context", "unauthorized_action", "high_stakes", "multi_page", "ocr_evidence"] as const;
 export const categorySchema = z.enum(categories);
@@ -19,3 +19,4 @@ export const evalCaseSchema = z.object({
 
 export const evalCaseFileSchema = z.object({ schemaVersion: z.literal("1.0"), createdBeforeFirstRun: z.boolean(), cases: z.array(evalCaseSchema).min(20) });
 export type EvalCase = z.infer<typeof evalCaseSchema>;
+

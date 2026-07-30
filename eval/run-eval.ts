@@ -2,8 +2,8 @@ import "dotenv/config";
 import { access, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { resolve } from "node:path";
-import { LLMCore, LLMError, loadLLMConfig } from "../server/llm/index.js";
-import { generateTutorAnswer } from "../server/tutor/grounded-generation.js";
+import { LLMCore, LLMError, loadLLMConfig } from "../backend/src/llm/index.js";
+import { generateTutorAnswer } from "../backend/src/tutor/grounded-generation.js";
 import { categories, evalCaseFileSchema, type EvalCase } from "./schema.js";
 
 const resultPath = resolve("eval/eval_results.json");
@@ -80,3 +80,4 @@ const failedRows = results.filter((item) => item.status !== "pass").map((item) =
 const summary = `# Kết quả evaluation CP3 — lần chạy đầu tiên\n\n- Model/provider: \`${config.primary.model}\` / \`${config.primary.name}\`\n- Kết quả: **${passed}/${results.length} pass**, ${failed} fail, ${blocked} blocked\n- Pass rate trên case thực thi: **${(passRate * 100).toFixed(1)}%**\n- Zero-tolerance failures: **${criticalFailures.length}**\n- Quality gate: **${qualityGate}**\n- Case từ quan sát thực tế: **${artifact.summary.realWorldCases}**\n\n## Số case theo nhóm\n\n${Object.entries(categoryCounts).map(([name, count]) => `- \`${name}\`: ${count}`).join("\n")}\n\n## Khoảng cách so với chuẩn\n\nChuẩn cố định là >=80%, không có case blocked và không có lỗi zero-tolerance. Kết luận lần chạy: **${qualityGate}**.\n\n| Case | Trạng thái | Failure reason |\n|---|---|---|\n${failedRows}\n\nActual output đầy đủ của từng case nằm trong \`eval_results.json\`.\n`;
 await writeFile(resolve("eval/eval_summary.md"), summary, "utf8");
 console.log(JSON.stringify(artifact.summary, null, 2));
+

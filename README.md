@@ -1,5 +1,9 @@
 # Mini Hackathon AI — Batch 03
 
+> **Code structure:** source code is separated into `frontend/` and `backend/`.
+> See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for file ownership, API flow,
+> `.env` placement, and commands for running each application.
+
 ## Chạy AI Tutor với PDF trong `data/slide`
 
 Ứng dụng tự phát hiện các file `.pdf` trong `data/slide`; người dùng không cần upload.

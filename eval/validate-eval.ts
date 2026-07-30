@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+﻿import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { categories, evalCaseFileSchema } from "./schema.js";
 
@@ -21,3 +21,4 @@ for (const item of realWorldCases) {
 }
 
 console.log(JSON.stringify({ valid: true, total: parsed.cases.length, categoryCounts, realWorldCases: realWorldCases.length }, null, 2));
+

@@ -2,7 +2,7 @@
 
 ## Kiến trúc
 
-Mọi lời gọi mô hình chạy ở server và đi qua `server/llm/LLMCore`. Frontend không chứa API key và không import SDK của provider.
+Mọi lời gọi mô hình chạy ở server và đi qua `backend/src/llm/LLMCore`. Frontend không chứa API key và không import SDK của provider.
 
 ```text
 React → RAG retrieval → POST /api/tutor/chat

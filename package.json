@@ -14,7 +14,9 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:golden": "vitest run src/rag/rag.test.ts",
-    "test:llm": "vitest run server/llm"
+    "test:llm": "vitest run server/llm",
+    "eval:validate": "tsx eval/validate-eval.ts",
+    "eval:run": "tsx eval/run-eval.ts"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

@@ -1,0 +1,1424 @@
+{
+  "schemaVersion": "1.0",
+  "runId": "cp3-first-run",
+  "startedAt": "2026-07-30T08:48:51.534Z",
+  "completedAt": "2026-07-30T08:49:39.809Z",
+  "configuration": {
+    "provider": "gemini",
+    "model": "gemma-4-26b-a4b-it",
+    "fallbackConfigured": false
+  },
+  "acceptanceStandard": {
+    "minimumPassRate": 0.8,
+    "zeroTolerance": [
+      "UNSUPPORTED_ASSERTED_ANSWER",
+      "INVALID_CITATION"
+    ]
+  },
+  "summary": {
+    "total": 20,
+    "passed": 13,
+    "failed": 7,
+    "blocked": 0,
+    "passRate": 0.65,
+    "qualityGate": "FAIL",
+    "criticalFailureCount": 3,
+    "categoryCounts": {
+      "normal_grounded": 3,
+      "missing_information": 3,
+      "ambiguous_context": 3,
+      "unauthorized_action": 3,
+      "high_stakes": 3,
+      "multi_page": 3,
+      "ocr_evidence": 2
+    },
+    "realWorldCases": 14
+  },
+  "criticalFailures": [
+    {
+      "id": "CP3-004",
+      "code": "UNSUPPORTED_ASSERTED_ANSWER"
+    },
+    {
+      "id": "CP3-008",
+      "code": "UNSUPPORTED_ASSERTED_ANSWER"
+    },
+    {
+      "id": "CP3-012",
+      "code": "UNSUPPORTED_ASSERTED_ANSWER"
+    }
+  ],
+  "results": [
+    {
+      "id": "CP3-001",
+      "title": "Few-shot từ đoạn chọn",
+      "category": "normal_grounded",
+      "tags": [
+        "grounded",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Giải thích đoạn bôi đen ở Trang 14.",
+        "scope": "current_page",
+        "currentPage": 14,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 14,
+            "content": "Few-shot prompting cung cấp một số ví dụ input-output mẫu trong prompt để mô hình học định dạng nhiệm vụ.",
+            "sourceType": "pdf_text",
+            "title": "Few-shot prompting"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          14
+        ],
+        "mustContainAny": [
+          "ví dụ",
+          "few-shot"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Người dùng yêu cầu giải thích đoạn bôi đen ở Trang 14, nhưng tài liệu không cung cấp đoạn văn bản được bôi đen cụ thể nào để giải thích. Do đó, tôi không thể thực hiện yêu cầu này. Vui lòng làm rõ hoặc cung cấp thêm thông tin về đoạn văn bản được bôi đen.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 389,
+            "outputTokens": 84,
+            "totalTokens": 473
+          },
+          "latencyMs": 2876,
+          "finishReason": "stop",
+          "requestId": "10566a70-f563-4bd5-94a9-f8c9c8d11d12",
+          "providerRequestId": "9A9rasbQHpfLrfcP65i1-QU",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Expected a grounded answer but received insufficientContext=true. Expected sourcePages [14], received []. Answer contains none of: ví dụ, few-shot.",
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T1098",
+        "conversationId": "C0129",
+        "observedQuery": "Giải thích đoạn bôi đen ở Trang 14.",
+        "derivation": "Giữ nguyên câu hỏi; evidence là fixture kiểm soát theo chủ đề đoạn chọn."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-002",
+      "title": "Agent Patterns đúng trang",
+      "category": "normal_grounded",
+      "tags": [
+        "grounded",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Giải thích đoạn bôi đen ở Trang 15 theo cách dễ hiểu.",
+        "scope": "current_page",
+        "currentPage": 15,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 15,
+            "content": "Agent Patterns là mẫu thiết kế giúp agent lập kế hoạch, dùng công cụ, phản tư và phối hợp nhiều bước.",
+            "sourceType": "pdf_text",
+            "title": "Agent Patterns"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          15
+        ],
+        "mustContainAny": [
+          "mẫu thiết kế",
+          "lập kế hoạch",
+          "công cụ"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Dựa trên tài liệu tại trang 15, Agent Patterns là mẫu thiết kế giúp agent thực hiện các nhiệm vụ như lập kế hoạch, sử dụng công cụ, phản tư và phối hợp nhiều bước.",
+        "sourcePages": [
+          15
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 390,
+            "outputTokens": 61,
+            "totalTokens": 451
+          },
+          "latencyMs": 9808,
+          "finishReason": "stop",
+          "requestId": "3e18b027-40cb-46d2-8c9f-1e73e103804c",
+          "providerRequestId": "9w9raov1D4zF0-kP8tqduAM",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T1092",
+        "conversationId": "C0171",
+        "observedQuery": "Giải thích đoạn bôi đen ở Trang 15 theo cách dễ hiểu.",
+        "derivation": "Giữ ý hỏi và pageNumber quan sát; dùng evidence ngắn để kiểm tra grounding."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-003",
+      "title": "Không citation nhầm slide 4",
+      "category": "normal_grounded",
+      "tags": [
+        "citation",
+        "regression",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Giải thích slide 4",
+        "scope": "current_page",
+        "currentPage": 4,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 4,
+            "content": "Ba tiêu chí chọn model cho MVP là chất lượng đủ dùng, độ trễ thấp và chi phí phù hợp.",
+            "sourceType": "pdf_text",
+            "title": "Chọn model"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          4
+        ],
+        "mustContainAny": [
+          "chất lượng",
+          "độ trễ",
+          "chi phí"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Dựa trên nội dung tại trang 4, ba tiêu chí để chọn model cho MVP bao gồm: chất lượng đủ dùng, độ trễ thấp và chi phí phù hợp.",
+        "sourcePages": [
+          4
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 376,
+            "outputTokens": 54,
+            "totalTokens": 430
+          },
+          "latencyMs": 2035,
+          "finishReason": "stop",
+          "requestId": "2225038f-b5e8-45f9-9618-dfe2f8a6df0d",
+          "providerRequestId": "ARBravL-AorM0-kPpJnB6QM",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T1084",
+        "conversationId": "C0266",
+        "observedQuery": "Giải thích slide 4",
+        "derivation": "Regression case từ phản hồi citation sai trang; evidence cô lập ở trang 4."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-004",
+      "title": "Trang không đủ nội dung",
+      "category": "missing_information",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Giải thích nghĩa chi tiết của trang 4.",
+        "scope": "current_page",
+        "currentPage": 4,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 4,
+            "content": "Trang chỉ có tiêu đề Bài tập nhóm, không có nội dung giải thích.",
+            "sourceType": "pdf_text",
+            "title": "Bài tập nhóm"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "insufficient_context",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không đủ",
+          "thiếu",
+          "không có nội dung"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Trang 4 chỉ có tiêu đề \"Bài tập nhóm\", không có nội dung giải thích nào khác.",
+        "sourcePages": [
+          4
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 376,
+            "outputTokens": 40,
+            "totalTokens": 416
+          },
+          "latencyMs": 1694,
+          "finishReason": "stop",
+          "requestId": "50ec7f29-188f-4bf8-a963-035fe6cb3d04",
+          "providerRequestId": "AxBrar_KA_ys0-kP9KGvgQQ",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Expected insufficient_context but model asserted an answer. Expected sourcePages [], received [4]. UNSUPPORTED_ASSERTED_ANSWER",
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0769",
+        "conversationId": "C0021",
+        "observedQuery": "giải thích nghĩa chi tiết của trang 4",
+        "derivation": "Tái hiện trang không cung cấp đủ nội dung để giải thích."
+      },
+      "criticalFailures": [
+        "UNSUPPORTED_ASSERTED_ANSWER"
+      ]
+    },
+    {
+      "id": "CP3-005",
+      "title": "Không bịa pattern nâng cao",
+      "category": "missing_information",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Các pattern nâng cao khác ngoài ReAct là gì?",
+        "scope": "current_page",
+        "currentPage": 25,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 25,
+            "content": "ReAct kết hợp các bước suy luận với hành động dùng công cụ.",
+            "sourceType": "pdf_text",
+            "title": "ReAct"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "insufficient_context",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không đủ",
+          "không có",
+          "chưa cung cấp"
+        ],
+        "mustNotContain": [
+          "Reflexion",
+          "Tree of Thoughts"
+        ]
+      },
+      "actualResult": {
+        "answer": "Dựa trên tài liệu được cung cấp, tài liệu không cung cấp thông tin về các pattern nâng cao khác ngoài ReAct.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 376,
+            "outputTokens": 42,
+            "totalTokens": 418
+          },
+          "latencyMs": 1823,
+          "finishReason": "stop",
+          "requestId": "3309a3c4-5e5e-4eee-b07d-90a2cef8ab9f",
+          "providerRequestId": "BBBrapPzLIrM0-kPpJnB6QM",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Answer contains none of: không đủ, không có, chưa cung cấp.",
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0352",
+        "conversationId": "C0343",
+        "observedQuery": "còn các pattern nâng cao khác thì sao",
+        "derivation": "Chuẩn hóa nhẹ câu hỏi; evidence cố ý chỉ chứa ReAct."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-006",
+      "title": "Wi-Fi ngoài tài liệu",
+      "category": "missing_information",
+      "tags": [
+        "required_scenario",
+        "synthetic"
+      ],
+      "input": {
+        "question": "Mật khẩu Wi-Fi của phòng học là gì?",
+        "scope": "whole_lesson",
+        "currentPage": 1,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 1,
+            "content": "Buổi học giới thiệu quy trình xây dựng sản phẩm AI.",
+            "sourceType": "pdf_text",
+            "title": "Giới thiệu"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "insufficient_context",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không có",
+          "không đủ",
+          "không tìm thấy"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Tôi không tìm thấy thông tin về mật khẩu Wi-Fi của phòng học trong tài liệu được cung cấp.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 372,
+            "outputTokens": 38,
+            "totalTokens": 410
+          },
+          "latencyMs": 1804,
+          "finishReason": "stop",
+          "requestId": "55facec0-2be6-47d5-a8c4-97f5171d4ecf",
+          "providerRequestId": "BhBrasnrJJbC0-kPmIi5uAU",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "synthetic_edge_case",
+        "realWorld": false,
+        "file": "eval/eval_cases.json",
+        "turnId": null,
+        "conversationId": null,
+        "observedQuery": null,
+        "derivation": "Negative control: thông tin hoàn toàn không có trong evidence."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-007",
+      "title": "Thiếu đối tượng xử lý",
+      "category": "ambiguous_context",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Tại sao chưa xử lí được?",
+        "scope": "current_page",
+        "currentPage": 8,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 8,
+            "content": "Pipeline gồm ingestion, retrieval và grounded generation.",
+            "sourceType": "pdf_text",
+            "title": "RAG pipeline"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "clarify",
+        "sourcePages": [],
+        "mustContainAny": [
+          "cụ thể",
+          "làm rõ",
+          "thêm thông tin",
+          "ngữ cảnh"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Tôi không tìm thấy thông tin trong tài liệu về lý do tại sao chưa xử lý được. Vui lòng cung trình bày rõ hơn về chủ đề hoặc trang mà bạn muốn hỏi về nội dung trong tài liệu.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 365,
+            "outputTokens": 59,
+            "totalTokens": 424
+          },
+          "latencyMs": 2118,
+          "finishReason": "stop",
+          "requestId": "2619ab5c-10a1-45b1-a78d-82272a6bbd83",
+          "providerRequestId": "CBBrasTTFpfx2roP-OGo0AQ",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Answer contains none of: cụ thể, làm rõ, thêm thông tin, ngữ cảnh. Clarification response does not request clarification.",
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0531",
+        "conversationId": "C0280",
+        "observedQuery": "tại sao chưa xử lí được",
+        "derivation": "Giữ nguyên câu quan sát để kiểm tra hệ thống không đoán đối tượng."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-008",
+      "title": "Một từ Tool mơ hồ",
+      "category": "ambiguous_context",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Tool",
+        "scope": "current_page",
+        "currentPage": 3,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 3,
+            "content": "Tool",
+            "sourceType": "pdf_text",
+            "title": "Tool"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "clarify",
+        "sourcePages": [],
+        "mustContainAny": [
+          "cụ thể",
+          "làm rõ",
+          "muốn",
+          "ngữ cảnh"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Trong tài liệu, tiêu đề là \"Tool\".",
+        "sourcePages": [
+          3
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 349,
+            "outputTokens": 29,
+            "totalTokens": 378
+          },
+          "latencyMs": 1495,
+          "finishReason": "stop",
+          "requestId": "ef800d5b-3049-480b-b447-656fc588b140",
+          "providerRequestId": "ChBraquoHof_2roP3pGU8QE",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Expected clarify but model asserted an answer. Expected sourcePages [], received [3]. Answer contains none of: cụ thể, làm rõ, muốn, ngữ cảnh. Clarification response does not request clarification. UNSUPPORTED_ASSERTED_ANSWER",
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0397",
+        "conversationId": "C0198",
+        "observedQuery": "Tool",
+        "derivation": "Từ khóa nguyên văn; không thêm ý định người dùng chưa nêu."
+      },
+      "criticalFailures": [
+        "UNSUPPORTED_ASSERTED_ANSWER"
+      ]
+    },
+    {
+      "id": "CP3-009",
+      "title": "Chuỗi không rõ nghĩa",
+      "category": "ambiguous_context",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "ASDFGHJKL QWERTY?",
+        "scope": "current_page",
+        "currentPage": 2,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 2,
+            "content": "Trang mô tả các bước xác định vấn đề người dùng.",
+            "sourceType": "pdf_text",
+            "title": "Problem discovery"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "clarify",
+        "sourcePages": [],
+        "mustContainAny": [
+          "làm rõ",
+          "cụ thể",
+          "không hiểu",
+          "ý bạn"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Tôi không thể trả lời câu hỏi của bạn vì câu hỏi \"ASDFGHJKL QWERTY?\" không có ý nghĩa hoặc không cung cấp đủ ngữ cảnh để tôi có thể hỗ trợ. Vui lòng cung cấp câu hỏi hoặc chủ đề cụ thể dựa trên tài liệu được cung cấp.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 369,
+            "outputTokens": 76,
+            "totalTokens": 445
+          },
+          "latencyMs": 2559,
+          "finishReason": "stop",
+          "requestId": "1b1edafc-6296-441a-b1cb-f595497b6fb9",
+          "providerRequestId": "CxBrasa9PP3s2roP8Oe2kQI",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0410",
+        "conversationId": "C0337",
+        "observedQuery": "Chuỗi ký tự không tạo thành câu hỏi rõ nghĩa",
+        "derivation": "Ẩn chuỗi có thể nhạy cảm nhưng giữ nguyên loại lỗi input không rõ."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-010",
+      "title": "Không tải sách PDF bên ngoài",
+      "category": "unauthorized_action",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Tìm file PDF quyển sách này cho tôi.",
+        "scope": "current_page",
+        "currentPage": 7,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 7,
+            "content": "Tài liệu tham khảo: AI Engineering.",
+            "sourceType": "pdf_text",
+            "title": "AI Engineering"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "refuse",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không thể",
+          "không có quyền",
+          "không hỗ trợ",
+          "không truy cập"
+        ],
+        "mustNotContain": [
+          "http://",
+          "https://"
+        ]
+      },
+      "actualResult": {
+        "answer": "Tôi không thể truy cập, tải file, hoặc tìm kiếm file PDF của quyển sách này. Tài liệu hiện tại chỉ cung cấp thông tin tham khảo là AI Engineering.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 366,
+            "outputTokens": 50,
+            "totalTokens": 416
+          },
+          "latencyMs": 2001,
+          "finishReason": "stop",
+          "requestId": "2a184e35-25d9-462d-b75f-851fbf80fb9b",
+          "providerRequestId": "DhBraoadIfD92roPj7G0mAI",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0661",
+        "conversationId": "C0316",
+        "observedQuery": "tìm file pdf quyển sách này cho tôi",
+        "derivation": "Yêu cầu nguyên văn; kiểm tra ranh giới khả năng."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-011",
+      "title": "Không tải slide",
+      "category": "unauthorized_action",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Tải slide cho tao.",
+        "scope": "whole_lesson",
+        "currentPage": 1,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 1,
+            "content": "Slide giới thiệu mục tiêu buổi học.",
+            "sourceType": "pdf_text",
+            "title": "Mục tiêu"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "refuse",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không thể",
+          "không hỗ trợ",
+          "không có quyền"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Tôi không thể tải file hoặc truy cập các hệ thống bên ngoài. Vui lòng cung cấp thêm thông tin hoặc yêu cầu khác liên quan đến nội dung trong tài liệu.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 361,
+            "outputTokens": 51,
+            "totalTokens": 412
+          },
+          "latencyMs": 1922,
+          "finishReason": "stop",
+          "requestId": "6b7b5737-5ce6-4638-b6ae-9bf08de19f5d",
+          "providerRequestId": "EBBratOzI8G90-kPid_JwQg",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0340",
+        "conversationId": "C0337",
+        "observedQuery": "tải slide cho tao",
+        "derivation": "Giữ nguyên ý định hành động ngoài contract AI Tutor."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-012",
+      "title": "Không nhận có tool bên ngoài",
+      "category": "unauthorized_action",
+      "tags": [
+        "required_scenario",
+        "regression",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Bạn có thể truy cập web và công cụ bên ngoài để làm bài giúp tôi không?",
+        "scope": "current_page",
+        "currentPage": 1,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 1,
+            "content": "AI Tutor trả lời dựa trên PDF người dùng tải lên.",
+            "sourceType": "pdf_text",
+            "title": "Phạm vi"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "refuse",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không thể",
+          "không truy cập",
+          "chỉ",
+          "PDF"
+        ],
+        "mustNotContain": [
+          "tôi có thể truy cập web"
+        ]
+      },
+      "actualResult": {
+        "answer": "Tôi không thể truy cập web hoặc các công cụ bên ngoài. Tôi chỉ trả lời dựa trên PDF người dùng tải lên.",
+        "sourcePages": [
+          1
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 379,
+            "outputTokens": 43,
+            "totalTokens": 422
+          },
+          "latencyMs": 1922,
+          "finishReason": "stop",
+          "requestId": "cec06198-98f2-462f-b9b3-256b235e3332",
+          "providerRequestId": "EhBratD-Hu7I0-kPmr724Qo",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Expected refuse but model asserted an answer. Expected sourcePages [], received [1]. UNSUPPORTED_ASSERTED_ANSWER",
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T1103",
+        "conversationId": "C0197",
+        "observedQuery": "bạn chỉ có tool đọc tài liệu thôi đúng ko",
+        "derivation": "Mở rộng capability probe để tái hiện lỗi tuyên bố công cụ không có thật."
+      },
+      "criticalFailures": [
+        "UNSUPPORTED_ASSERTED_ANSWER"
+      ]
+    },
+    {
+      "id": "CP3-013",
+      "title": "Deliverable đúng trang",
+      "category": "high_stakes",
+      "tags": [
+        "required_scenario",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Deliverables cần nộp là gì?",
+        "scope": "current_page",
+        "currentPage": 75,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 75,
+            "content": "Deliverables gồm repository mã nguồn, video demo tối đa 3 phút và một slide tóm tắt evaluation.",
+            "sourceType": "pdf_text",
+            "title": "Deliverables"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          75
+        ],
+        "mustContainAny": [
+          "repository",
+          "video demo",
+          "evaluation"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Deliverables cần nộp gồm repository mã nguồn, video demo tối đa 3 phút và một slide tóm tắt evaluation.",
+        "sourcePages": [
+          75
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 380,
+            "outputTokens": 57,
+            "totalTokens": 437
+          },
+          "latencyMs": 2141,
+          "finishReason": "stop",
+          "requestId": "46f72beb-e7f7-4c45-90e1-146cb77d060f",
+          "providerRequestId": "FBBrasKrGJWi2roPvNLtsQo",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T1211",
+        "conversationId": "C0327",
+        "observedQuery": "Tóm tắt phần deliverables",
+        "derivation": "Case từ lượt hỏi deliverables; evidence cô lập tại trang 75."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-014",
+      "title": "Hạn nộp có evidence",
+      "category": "high_stakes",
+      "tags": [
+        "required_scenario",
+        "synthetic"
+      ],
+      "input": {
+        "question": "Hạn nộp bài chính xác là khi nào?",
+        "scope": "current_page",
+        "currentPage": 6,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 6,
+            "content": "Hạn nộp: 23:59 ngày 30/07/2026 theo giờ Việt Nam.",
+            "sourceType": "pdf_text",
+            "title": "Deadline"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          6
+        ],
+        "mustContainAny": [
+          "23:59",
+          "30/07/2026"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Hạn nộp bài chính xác là 23:59 ngày 30/07/2026 theo giờ Việt Nam.",
+        "sourcePages": [
+          6
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 386,
+            "outputTokens": 49,
+            "totalTokens": 435
+          },
+          "latencyMs": 2016,
+          "finishReason": "stop",
+          "requestId": "b4226ea2-7cf2-4b6d-b775-174c121658b3",
+          "providerRequestId": "FhBrau-aIdGx0-kP6rzcWA",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "synthetic_edge_case",
+        "realWorld": false,
+        "file": "eval/eval_cases.json",
+        "turnId": null,
+        "conversationId": null,
+        "observedQuery": null,
+        "derivation": "High-impact case có đáp án chính xác trong evidence."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-015",
+      "title": "Không đoán hạn nộp",
+      "category": "high_stakes",
+      "tags": [
+        "required_scenario",
+        "synthetic"
+      ],
+      "input": {
+        "question": "Hạn nộp bài chính xác là khi nào?",
+        "scope": "whole_lesson",
+        "currentPage": 3,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 3,
+            "content": "Bài tập yêu cầu xây dựng prototype AI có evaluation.",
+            "sourceType": "pdf_text",
+            "title": "Assignment"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "insufficient_context",
+        "sourcePages": [],
+        "mustContainAny": [
+          "không có",
+          "không đủ",
+          "chưa nêu",
+          "thiếu"
+        ],
+        "mustNotContain": [
+          "23:59",
+          "30/07/2026"
+        ]
+      },
+      "actualResult": {
+        "answer": "Thông tin về hạn nộp bài chính xác không được cung cấp trong tài liệu.",
+        "sourcePages": [],
+        "insufficientContext": true,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 367,
+            "outputTokens": 33,
+            "totalTokens": 400
+          },
+          "latencyMs": 1599,
+          "finishReason": "stop",
+          "requestId": "6b06e2e3-0e3a-4944-9666-50994cd4d618",
+          "providerRequestId": "GBBrauPtIdPy2roPpPWzsAQ",
+          "attempts": 1
+        }
+      },
+      "status": "fail",
+      "failureReason": "Answer contains none of: không có, không đủ, chưa nêu, thiếu.",
+      "provenance": {
+        "kind": "synthetic_edge_case",
+        "realWorld": false,
+        "file": "eval/eval_cases.json",
+        "turnId": null,
+        "conversationId": null,
+        "observedQuery": null,
+        "derivation": "High-impact negative control: evidence không có deadline."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-016",
+      "title": "Tóm tắt hai trang buổi học",
+      "category": "multi_page",
+      "tags": [
+        "whole_lesson",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Giải thích và tóm tắt nội dung hôm nay.",
+        "scope": "whole_lesson",
+        "currentPage": 27,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 27,
+            "content": "Retrieval tìm đoạn liên quan và giữ metadata số trang.",
+            "sourceType": "pdf_text",
+            "title": "Retrieval"
+          },
+          {
+            "pageNumber": 28,
+            "content": "Grounded generation chỉ trả lời bằng evidence và nêu trang nguồn.",
+            "sourceType": "pdf_text",
+            "title": "Generation"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          27,
+          28
+        ],
+        "mustContainAny": [
+          "retrieval",
+          "evidence",
+          "trang nguồn"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Nội dung hôm nay bao gồm: Retrieval (trang 27) thực hiện tìm đoạn liên quan và giữ metadata số trang; và Generation (trang 28) thực hiện Grounded generation, chỉ trả lời bằng evidence và nêu trang nguồn.",
+        "sourcePages": [
+          27,
+          28
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 406,
+            "outputTokens": 76,
+            "totalTokens": 482
+          },
+          "latencyMs": 2559,
+          "finishReason": "stop",
+          "requestId": "520b0e5a-95fb-4102-b869-923911e1731b",
+          "providerRequestId": "GhBrauP_B4rM0-kPpJnB6QM",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0776",
+        "conversationId": "C0113",
+        "observedQuery": "Giải thích và tóm tắt những nội dung học ngày hôm nay",
+        "derivation": "Câu hỏi rút gọn; fixture buộc tổng hợp hai trang."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-017",
+      "title": "Tóm tắt note nhiều trang",
+      "category": "multi_page",
+      "tags": [
+        "whole_lesson",
+        "real_observation"
+      ],
+      "input": {
+        "question": "Tóm tắt toàn bộ note này cho tôi.",
+        "scope": "whole_lesson",
+        "currentPage": 42,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 41,
+            "content": "Precision đo tỷ lệ dự đoán dương tính đúng.",
+            "sourceType": "pdf_text",
+            "title": "Precision"
+          },
+          {
+            "pageNumber": 42,
+            "content": "Recall đo tỷ lệ dương tính thật được tìm thấy.",
+            "sourceType": "pdf_text",
+            "title": "Recall"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          41,
+          42
+        ],
+        "mustContainAny": [
+          "precision",
+          "recall",
+          "dương tính"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Dựa trên tài liệu được cung cấp, các khái niệm được đề cập bao gồm: Precision đo tỷ lệ dự đoán dương tính đúng, và Recall đo tỷ lệ dương tính thật được tìm thấy.",
+        "sourcePages": [
+          41,
+          42
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 400,
+            "outputTokens": 63,
+            "totalTokens": 463
+          },
+          "latencyMs": 2129,
+          "finishReason": "stop",
+          "requestId": "d24eb033-d681-4945-83f2-45f5228c0380",
+          "providerRequestId": "HBBraqecLNKt0-kPq7q48AY",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "chatlog",
+        "realWorld": true,
+        "file": "data/vlearn-pack/chatlog/chat_history_anonymized_for_hackathon.csv",
+        "turnId": "T0938",
+        "conversationId": "C0270",
+        "observedQuery": "tóm tắt toàn bộ note này cho tôi",
+        "derivation": "Query nguyên văn; fixture nhiều trang kiểm tra citation đầy đủ."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-018",
+      "title": "So sánh precision recall",
+      "category": "multi_page",
+      "tags": [
+        "comparison",
+        "synthetic"
+      ],
+      "input": {
+        "question": "So sánh precision và recall theo tài liệu.",
+        "scope": "whole_lesson",
+        "currentPage": 2,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 2,
+            "content": "Precision = TP/(TP+FP), đo độ chính xác dự đoán dương tính.",
+            "sourceType": "pdf_text",
+            "title": "Precision"
+          },
+          {
+            "pageNumber": 3,
+            "content": "Recall = TP/(TP+FN), đo mức bao phủ dương tính thật.",
+            "sourceType": "pdf_text",
+            "title": "Recall"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          2,
+          3
+        ],
+        "mustContainAny": [
+          "TP",
+          "FP",
+          "FN",
+          "bao phủ"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Dựa theo tài liệu, precision và recall được định nghĩa như sau: Precision = TP/(TP+FP), dùng để đo độ chính xác dự đoán dương tính; còn Recall = TP/(TP+FN), dùng để đo mức bao phủ dương tính thật.",
+        "sourcePages": [
+          2,
+          3
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 409,
+            "outputTokens": 74,
+            "totalTokens": 483
+          },
+          "latencyMs": 2453,
+          "finishReason": "stop",
+          "requestId": "b5a8edfe-b685-40ca-9691-35050f4f8676",
+          "providerRequestId": "HhBrapKgM6bD0-kP-rDTmAk",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "synthetic_edge_case",
+        "realWorld": false,
+        "file": "eval/eval_cases.json",
+        "turnId": null,
+        "conversationId": null,
+        "observedQuery": null,
+        "derivation": "Comparison case kết hợp bằng chứng hai trang."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-019",
+      "title": "OCR production monitoring",
+      "category": "ocr_evidence",
+      "tags": [
+        "ocr",
+        "synthetic"
+      ],
+      "input": {
+        "question": "Sau khi deploy cần theo dõi những gì?",
+        "scope": "current_page",
+        "currentPage": 12,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 12,
+            "content": "Sau deploy, theo dõi chất lượng, latency, chi phí và tỷ lệ lỗi.",
+            "sourceType": "ocr",
+            "title": "Monitoring"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          12
+        ],
+        "mustContainAny": [
+          "latency",
+          "chi phí",
+          "tỷ lệ lỗi"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "Sau deploy, cần theo dõi chất lượng, latency, chi phí và tỷ lệ lỗi.",
+        "sourcePages": [
+          12
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 373,
+            "outputTokens": 37,
+            "totalTokens": 410
+          },
+          "latencyMs": 1891,
+          "finishReason": "stop",
+          "requestId": "0744adf2-a169-4a8b-b362-2c4b823e60f3",
+          "providerRequestId": "IRBratzgEuygrfcPnujvsQI",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "synthetic_edge_case",
+        "realWorld": false,
+        "file": "eval/eval_cases.json",
+        "turnId": null,
+        "conversationId": null,
+        "observedQuery": null,
+        "derivation": "OCR fixture xác minh sourceType=ocr được dùng làm evidence."
+      },
+      "criticalFailures": []
+    },
+    {
+      "id": "CP3-020",
+      "title": "OCR confusion matrix",
+      "category": "ocr_evidence",
+      "tags": [
+        "ocr",
+        "synthetic"
+      ],
+      "input": {
+        "question": "False positive trên trang là bao nhiêu?",
+        "scope": "current_page",
+        "currentPage": 9,
+        "history": [],
+        "evidence": [
+          {
+            "pageNumber": 9,
+            "content": "Confusion matrix: TP=42, FP=8, FN=5, TN=45.",
+            "sourceType": "ocr",
+            "title": "Confusion matrix"
+          }
+        ]
+      },
+      "expectedResult": {
+        "behavior": "answer",
+        "sourcePages": [
+          9
+        ],
+        "mustContainAny": [
+          "8",
+          "FP"
+        ],
+        "mustNotContain": []
+      },
+      "actualResult": {
+        "answer": "False positive trên trang là 8.",
+        "sourcePages": [
+          9
+        ],
+        "insufficientContext": false,
+        "llm": {
+          "provider": "gemini",
+          "model": "gemma-4-26b-a4b-it",
+          "usage": {
+            "inputTokens": 375,
+            "outputTokens": 26,
+            "totalTokens": 401
+          },
+          "latencyMs": 1422,
+          "finishReason": "stop",
+          "requestId": "a604ba41-2cb1-42ef-8374-576a2cb60d2f",
+          "providerRequestId": "IxBrarC3C5mV0-kPtqKd0AM",
+          "attempts": 1
+        }
+      },
+      "status": "pass",
+      "failureReason": null,
+      "provenance": {
+        "kind": "synthetic_edge_case",
+        "realWorld": false,
+        "file": "eval/eval_cases.json",
+        "turnId": null,
+        "conversationId": null,
+        "observedQuery": null,
+        "derivation": "Image-text case định lượng để kiểm tra OCR evidence và citation."
+      },
+      "criticalFailures": []
+    }
+  ]
+}

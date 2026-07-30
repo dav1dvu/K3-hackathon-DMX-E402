@@ -1,213 +1,211 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { TutorScreen } from "./components/TutorScreen";
-import { UploadScreen } from "./components/UploadScreen";
-import { ingestPdfDocument } from "./rag/ingestion";
-import { askTutor } from "./services/tutorApi";
+import {
+  askTutor,
+  getProcessedSlides,
+  listSlideDocuments,
+} from "./services/tutorApi";
 import type {
-  AppScreen,
   ChatMessage,
-  DocumentKnowledge,
-  IngestionProgress,
-  PdfSource,
-  QueryScope,
+  ProcessedSlidesResponse,
+  SlideDocumentSummary,
 } from "./types";
 
-const PROCESSING_DELAY_MS = 1000;
-const SAMPLE_FILE_NAME = "Strategyn JTBD Playbook.pdf";
-const SAMPLE_FILE_URL = "/sample-document.pdf";
+type LoadingState = "discovering" | "processing" | "ready" | "empty" | "error";
 
 function createMessageId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function conversationKey(scope: QueryScope, pageNumber: number) {
-  return scope === "whole_lesson" ? "whole_lesson" : `current_page:${pageNumber}`;
-}
-
 export default function App() {
-  const [screen, setScreen] = useState<AppScreen>("upload");
-  const [pdfSource, setPdfSource] = useState<PdfSource | null>(null);
-  const [documentName, setDocumentName] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [documents, setDocuments] = useState<SlideDocumentSummary[]>([]);
+  const [selectedDocumentId, setSelectedDocumentId] = useState("");
+  const [processedSlides, setProcessedSlides] = useState<ProcessedSlidesResponse | null>(null);
+  const [loadingState, setLoadingState] = useState<LoadingState>("discovering");
+  const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [scope, setScope] = useState<QueryScope>("current_page");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
-  const [typingKeys, setTypingKeys] = useState<string[]>([]);
-  const [knowledge, setKnowledge] = useState<DocumentKnowledge | null>(null);
-  const [ingestionProgress, setIngestionProgress] = useState<IngestionProgress | null>(null);
-  const [ingestionError, setIngestionError] = useState("");
-  const timeoutsRef = useRef<number[]>([]);
-  const ingestionRunRef = useRef(0);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const documentRunRef = useRef(0);
   const chatRunRef = useRef(0);
 
-  const activeConversationKey = conversationKey(scope, currentPage);
-  const activeMessages = useMemo(
-    () => messages.filter((message) => (
-      message.scope === scope && (scope === "whole_lesson" || message.pageNumber === currentPage)
-    )),
-    [currentPage, messages, scope],
-  );
+  const selectedDocument = documents.find(({ id }) => id === selectedDocumentId) ?? null;
 
-  useEffect(
-    () => () => {
-      timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-      ingestionRunRef.current += 1;
-    },
-    [],
-  );
-
-  const startDocument = (name: string, source: PdfSource) => {
-    setPdfSource(source);
-    setDocumentName(name);
-    setKnowledge(null);
-    setIngestionError("");
-    setIngestionProgress(null);
-    setIsProcessing(true);
-    const timeoutId = window.setTimeout(() => {
-      setIsProcessing(false);
-      setScreen("tutor");
-    }, PROCESSING_DELAY_MS);
-    timeoutsRef.current.push(timeoutId);
-  };
-
-  const handleDocumentLoad = useCallback(async (pdf: PDFDocumentProxy) => {
-    const runId = ++ingestionRunRef.current;
-    setTotalPages(pdf.numPages);
-    setCurrentPage((page) => Math.min(page, pdf.numPages));
-    setIngestionError("");
+  const openDocument = useCallback(async (document: SlideDocumentSummary) => {
+    const runId = ++documentRunRef.current;
+    chatRunRef.current += 1;
+    setSelectedDocumentId(document.id);
+    setProcessedSlides(null);
+    setLoadingState("processing");
+    setError("");
+    setCurrentPage(1);
+    setTotalPages(0);
+    setMessages([]);
+    setQuestion("");
+    setIsBotTyping(false);
     try {
-      const nextKnowledge = await ingestPdfDocument(pdf, documentName, {
-        onProgress: (progress) => {
-          if (ingestionRunRef.current === runId) setIngestionProgress(progress);
-        },
-      });
-      if (ingestionRunRef.current === runId) setKnowledge(nextKnowledge);
-    } catch (error) {
-      console.error("Document ingestion failed", error);
-      if (ingestionRunRef.current === runId) {
-        setIngestionError("Không thể phân tích đầy đủ tài liệu. Hãy thử lại với file PDF khác.");
-      }
+      const payload = await getProcessedSlides(document.id);
+      if (documentRunRef.current !== runId) return;
+      setProcessedSlides(payload);
+      setTotalPages(payload.total_pages);
+      setLoadingState("ready");
+    } catch (caught) {
+      if (documentRunRef.current !== runId) return;
+      setLoadingState("error");
+      setError(caught instanceof Error ? caught.message : "Không thể xử lý tài liệu PDF.");
     }
-  }, [documentName]);
+  }, []);
+
+  const discoverDocuments = useCallback(async () => {
+    const runId = ++documentRunRef.current;
+    setLoadingState("discovering");
+    setError("");
+    try {
+      const discovered = await listSlideDocuments();
+      if (documentRunRef.current !== runId) return;
+      setDocuments(discovered);
+      if (!discovered.length) {
+        setLoadingState("empty");
+        return;
+      }
+      await openDocument(discovered[0]);
+    } catch (caught) {
+      if (documentRunRef.current !== runId) return;
+      setLoadingState("error");
+      setError(caught instanceof Error ? caught.message : "Không thể tìm tài liệu PDF.");
+    }
+  }, [openDocument]);
+
+  useEffect(() => {
+    void discoverDocuments();
+    return () => {
+      documentRunRef.current += 1;
+      chatRunRef.current += 1;
+    };
+  }, [discoverDocuments]);
+
+  const handleDocumentLoad = useCallback((pdf: PDFDocumentProxy) => {
+    setTotalPages(pdf.numPages);
+    setCurrentPage((page) => Math.max(1, Math.min(page, pdf.numPages)));
+  }, []);
 
   const selectPage = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    setQuestion("");
-  };
-
-  const handleScopeChange = (nextScope: QueryScope) => {
-    setScope(nextScope);
-    setQuestion("");
+    if (totalPages < 1) return;
+    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
   };
 
   const handleSendQuestion = (submittedQuestion: string) => {
-    if (!knowledge) return;
+    if (!selectedDocument || loadingState !== "ready" || isBotTyping) return;
     const runId = chatRunRef.current;
     const pageAtSendTime = currentPage;
-    const scopeAtSendTime = scope;
-    const keyAtSendTime = conversationKey(scopeAtSendTime, pageAtSendTime);
-    const historyAtSendTime = activeMessages;
+    const historyAtSendTime = messages;
     const userMessage: ChatMessage = {
       id: createMessageId("user"),
       pageNumber: pageAtSendTime,
-      scope: scopeAtSendTime,
+      scope: "current_page",
       role: "user",
       content: submittedQuestion,
     };
     setMessages((previous) => [...previous, userMessage]);
     setQuestion("");
-    setTypingKeys((previous) => [...previous, keyAtSendTime]);
+    setIsBotTyping(true);
 
     void askTutor({
-      index: knowledge.index,
-      question: submittedQuestion,
-      scope: scopeAtSendTime,
+      documentId: selectedDocument.id,
       currentPage: pageAtSendTime,
+      question: submittedQuestion,
       history: historyAtSendTime,
-    }).then((groundedAnswer) => {
+    }).then((answer) => {
       if (chatRunRef.current !== runId) return;
       setMessages((previous) => [...previous, {
         id: createMessageId("assistant"),
         pageNumber: pageAtSendTime,
-        scope: scopeAtSendTime,
+        scope: "current_page",
         role: "assistant",
-        content: groundedAnswer.answer,
-        sourcePages: groundedAnswer.sourcePages,
-        insufficientContext: groundedAnswer.insufficientContext,
+        content: answer.answer,
+        status: answer.insufficient_context ? "insufficient_context" : "answered",
+        citations: answer.citations,
       }]);
-    }).catch(() => {
+    }).catch((caught) => {
       if (chatRunRef.current !== runId) return;
       setMessages((previous) => [...previous, {
         id: createMessageId("assistant"),
         pageNumber: pageAtSendTime,
-        scope: scopeAtSendTime,
+        scope: "current_page",
         role: "assistant",
-        content: "Không thể kết nối tới mô hình ngôn ngữ. Vui lòng thử lại sau.",
-        sourcePages: [],
-        insufficientContext: true,
+        content: caught instanceof Error
+          ? caught.message
+          : "Không thể kết nối tới mô hình ngôn ngữ. Vui lòng thử lại sau.",
+        status: "insufficient_context",
+        citations: [],
       }]);
     }).finally(() => {
-      if (chatRunRef.current === runId) {
-        setTypingKeys((previous) => previous.filter((key) => key !== keyAtSendTime));
-      }
+      if (chatRunRef.current === runId) setIsBotTyping(false);
     });
   };
 
-  const resetApplication = () => {
-    timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-    timeoutsRef.current = [];
-    ingestionRunRef.current += 1;
-    chatRunRef.current += 1;
-    setScreen("upload");
-    setPdfSource(null);
-    setDocumentName("");
-    setIsProcessing(false);
-    setCurrentPage(1);
-    setTotalPages(0);
-    setScope("current_page");
-    setMessages([]);
-    setQuestion("");
-    setTypingKeys([]);
-    setKnowledge(null);
-    setIngestionProgress(null);
-    setIngestionError("");
-  };
-
-  if (screen === "upload") {
+  if (loadingState === "discovering") {
     return (
-      <UploadScreen
-        isProcessing={isProcessing}
-        processingFileName={documentName}
-        onFileSelected={(selectedFile) => startDocument(selectedFile.name, selectedFile)}
-        onUseSample={() => startDocument(SAMPLE_FILE_NAME, SAMPLE_FILE_URL)}
-      />
+      <main className="standalone-state" role="status">
+        <span className="spinner" />
+        <h1>Đang tìm tài liệu PDF...</h1>
+        <p>Backend đang kiểm tra thư mục data/slide.</p>
+      </main>
+    );
+  }
+
+  if (loadingState === "empty") {
+    return (
+      <main className="standalone-state" role="status">
+        <h1>Chưa có tài liệu</h1>
+        <p>Không tìm thấy tài liệu PDF trong thư mục data/slide.</p>
+        <button className="button button-primary" type="button" onClick={() => void discoverDocuments()}>
+          Kiểm tra lại
+        </button>
+      </main>
+    );
+  }
+
+  if (!selectedDocument) {
+    return (
+      <main className="standalone-state" role="alert">
+        <h1>Không thể mở tài liệu</h1>
+        <p>{error || "Danh sách tài liệu không hợp lệ."}</p>
+        <button className="button button-primary" type="button" onClick={() => void discoverDocuments()}>
+          Thử lại
+        </button>
+      </main>
     );
   }
 
   return (
     <TutorScreen
-      fileName={documentName}
-      pdfSource={pdfSource}
+      documents={documents}
+      selectedDocumentId={selectedDocument.id}
+      fileName={selectedDocument.filename}
+      pdfSource={selectedDocument.url}
       currentPage={currentPage}
       totalPages={totalPages}
-      messages={activeMessages}
+      messages={messages}
       question={question}
-      scope={scope}
-      isBotTyping={typingKeys.includes(activeConversationKey)}
-      knowledge={knowledge}
-      ingestionProgress={ingestionProgress}
-      ingestionError={ingestionError}
+      isBotTyping={isBotTyping}
+      isProcessing={loadingState === "processing"}
+      processedSlides={processedSlides}
+      processingError={loadingState === "error" ? error : ""}
       onDocumentLoad={handleDocumentLoad}
+      onSelectDocument={(documentId) => {
+        const document = documents.find(({ id }) => id === documentId);
+        if (document) void openDocument(document);
+      }}
       onSelectPage={selectPage}
-      onPrevious={() => selectPage(Math.max(1, currentPage - 1))}
-      onNext={() => selectPage(Math.min(totalPages, currentPage + 1))}
-      onScopeChange={handleScopeChange}
+      onPrevious={() => selectPage(currentPage - 1)}
+      onNext={() => selectPage(currentPage + 1)}
       onQuestionChange={setQuestion}
       onSendQuestion={handleSendQuestion}
-      onReset={resetApplication}
+      onRetry={() => void openDocument(selectedDocument)}
     />
   );
 }

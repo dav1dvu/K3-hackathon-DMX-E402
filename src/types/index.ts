@@ -6,14 +6,28 @@ export type QueryScope = "current_page" | "whole_lesson";
 
 export type SourceType = "pdf_text" | "ocr" | "empty";
 
+export type AnswerStatus = "answered" | "partially_answered" | "insufficient_context";
+
+export type Citation = {
+  page_start: number;
+  page_end: number;
+  section: string;
+};
+
+export type SlideCitation = {
+  page_number: number;
+  reason: string;
+};
+
 export type ChatMessage = {
   id: string;
   pageNumber: number;
   scope: QueryScope;
   role: ChatRole;
   content: string;
-  sourcePages?: number[];
-  insufficientContext?: boolean;
+  status?: AnswerStatus;
+  citations?: SlideCitation[];
+  missing_fields?: string[];
 };
 
 export type PdfSource = File | string;
@@ -23,27 +37,49 @@ export type PageContent = {
   content: string;
   sourceType: SourceType;
   title: string;
+  documentId?: string;
+  section?: string;
+  topic?: string;
 };
 
 export type DocumentChunk = {
   id: string;
+  documentId: string;
   pageNumber: number;
+  pageStart: number;
+  pageEnd: number;
   content: string;
   sourceType: SourceType;
   title: string;
+  section: string;
+  topic: string;
   terms: string[];
 };
 
+export type DocumentSectionSummary = {
+  id: string;
+  documentId: string;
+  section: string;
+  topic: string;
+  pageStart: number;
+  pageEnd: number;
+  pageNumbers: number[];
+  content: string;
+};
+
 export type DocumentIndex = {
+  documentId: string;
   pages: PageContent[];
   chunks: DocumentChunk[];
+  sections: DocumentSectionSummary[];
   documentFrequency: Record<string, number>;
 };
 
 export type GroundedAnswer = {
+  status: AnswerStatus;
   answer: string;
-  sourcePages: number[];
-  insufficientContext: boolean;
+  citations: Citation[];
+  missing_fields: string[];
   llm?: {
     provider: string;
     model: string;
@@ -62,6 +98,11 @@ export type GroundedAnswer = {
 
 export type LessonSection = {
   title: string;
+  documentId: string;
+  section: string;
+  topic: string;
+  pageStart: number;
+  pageEnd: number;
   pageNumbers: number[];
 };
 
@@ -70,6 +111,7 @@ export type LessonOverview = {
   summary: string;
   sections: LessonSection[];
   keywords: string[];
+  topicCount: number;
 };
 
 export type DocumentKnowledge = {
@@ -82,4 +124,32 @@ export type IngestionProgress = {
   totalPages: number;
   currentPage: number;
   stage: "extracting" | "ocr" | "indexing" | "complete";
+};
+
+export type SlideDocumentSummary = {
+  id: string;
+  filename: string;
+  title: string;
+  url: string;
+};
+
+export type ProcessedSlide = {
+  filename: string;
+  page_number: number;
+  text: string;
+  element_types: string[];
+};
+
+export type ProcessedSlidesResponse = {
+  document_id: string;
+  filename: string;
+  status: "ready";
+  total_pages: number;
+  slides: ProcessedSlide[];
+};
+
+export type SlideChatAnswer = {
+  answer: string;
+  citations: SlideCitation[];
+  insufficient_context: boolean;
 };

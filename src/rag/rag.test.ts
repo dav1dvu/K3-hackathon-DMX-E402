@@ -18,11 +18,12 @@ describe("golden RAG cases", () => {
       scope: testCase.scope as QueryScope,
       currentPage: testCase.currentPage,
     });
-    expect(result.insufficientContext).toBe(testCase.insufficientContext);
-    expect(result.sourcePages).toEqual(testCase.expectedPages);
-    if (!result.insufficientContext) {
-      expect(result.answer).toMatch(/Trang \d+:/);
-      result.sourcePages.forEach((pageNumber) => {
+    expect(result.status === "insufficient_context").toBe(testCase.insufficientContext);
+    const sourcePages = result.citations.map((citation) => citation.page_start);
+    expect(sourcePages).toEqual(testCase.expectedPages);
+    if (result.status !== "insufficient_context") {
+      expect(result.answer).toMatch(/Trang \d+/i);
+      sourcePages.forEach((pageNumber) => {
         expect(pages.some((page) => page.pageNumber === pageNumber)).toBe(true);
       });
     }
@@ -66,6 +67,6 @@ describe("PDF ingestion", () => {
       scope: "whole_lesson",
       currentPage: 1,
     });
-    expect(answer).toMatchObject({ sourcePages: [2], insufficientContext: false });
+    expect(answer).toMatchObject({ status: "answered", citations: [{ page_start: 2, page_end: 2 }] });
   });
 });

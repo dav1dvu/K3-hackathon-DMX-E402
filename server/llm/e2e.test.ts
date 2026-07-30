@@ -58,9 +58,10 @@ describe("OpenAI-compatible tutor flow", () => {
         choices: [{
           message: {
             content: JSON.stringify({
+              status: "answered",
               answer: "Trang 2 yêu cầu theo dõi latency và lỗi.",
-              sourcePages: [2],
-              insufficientContext: false,
+              citations: [{ page_start: 2, page_end: 2, section: "Deployment monitoring" }],
+              missing_fields: [],
             }),
           },
           finish_reason: "stop",
@@ -120,9 +121,10 @@ describe("OpenAI-compatible tutor flow", () => {
 
     expect(response.status).toBe(200);
     expect(result).toMatchObject({
+      status: "answered",
       answer: "Trang 2 yêu cầu theo dõi latency và lỗi.",
-      sourcePages: [2],
-      insufficientContext: false,
+      citations: [{ page_start: 2, page_end: 2, section: "Deployment monitoring" }],
+      missing_fields: [],
       llm: {
         provider: "local-openai-compatible",
         model: "stub-grounded-model",

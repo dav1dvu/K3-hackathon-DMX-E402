@@ -1,50 +1,59 @@
-import type { DocumentKnowledge, IngestionProgress } from "../types";
+import type { ProcessedSlidesResponse } from "../types";
 
 type KnowledgePanelProps = {
-  knowledge: DocumentKnowledge | null;
-  progress: IngestionProgress | null;
+  processedSlides: ProcessedSlidesResponse | null;
+  isProcessing: boolean;
   error: string;
+  onRetry: () => void;
 };
 
-const stageLabels: Record<IngestionProgress["stage"], string> = {
-  extracting: "Đang trích xuất văn bản",
-  ocr: "Đang OCR trang có chữ trong ảnh",
-  indexing: "Đang tạo index toàn tài liệu",
-  complete: "Phân tích hoàn tất",
-};
-
-export function KnowledgePanel({ knowledge, progress, error }: KnowledgePanelProps) {
+export function KnowledgePanel({
+  processedSlides,
+  isProcessing,
+  error,
+  onRetry,
+}: KnowledgePanelProps) {
   if (error) {
-    return <div className="knowledge-status is-error" role="alert">{error}</div>;
-  }
-
-  if (!knowledge) {
-    const percentage = progress?.totalPages
-      ? Math.round((progress.processedPages / progress.totalPages) * 100)
-      : 0;
     return (
-      <div className="knowledge-status" role="status" aria-live="polite">
-        <div>
-          <strong>{progress ? stageLabels[progress.stage] : "Đang chuẩn bị phân tích tài liệu"}</strong>
-          <span>{progress ? `Trang ${progress.currentPage}/${progress.totalPages}` : "Vui lòng chờ..."}</span>
-        </div>
-        <span className="knowledge-progress"><span style={{ width: `${percentage}%` }} /></span>
+      <div className="knowledge-status is-error" role="alert">
+        <span>{error}</span>
+        <button type="button" onClick={onRetry}>Thử xử lý lại</button>
       </div>
     );
   }
 
+  if (isProcessing || !processedSlides) {
+    return (
+      <div className="knowledge-status" role="status" aria-live="polite">
+        <div>
+          <strong>Đang xử lý PDF bằng Unstructured</strong>
+          <span>Kết quả sẽ được cache tại data/processed</span>
+        </div>
+        <span className="knowledge-progress"><span className="is-indeterminate" /></span>
+      </div>
+    );
+  }
+
+  const elementTypes = [...new Set(
+    processedSlides.slides.flatMap((slide) => slide.element_types),
+  )];
   return (
     <details className="lesson-overview">
       <summary>
-        <span><strong>Tổng quan bài học</strong><small>{knowledge.overview.title}</small></span>
-        <span className="overview-ready">Đã lập index {knowledge.index.pages.length} trang</span>
+        <span>
+          <strong>Nội dung bài học đã sẵn sàng</strong>
+          <small>{processedSlides.filename}</small>
+        </span>
+        <span className="overview-ready">
+          {processedSlides.slides.length}/{processedSlides.total_pages} slide có văn bản
+        </span>
       </summary>
       <div className="overview-content">
-        <p>{knowledge.overview.summary}</p>
-        <div className="overview-columns">
-          <div><strong>Từ khóa</strong><div className="keyword-list">{knowledge.overview.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}</div></div>
-          <div><strong>Các phần chính</strong><ul>{knowledge.overview.sections.map((section) => <li key={`${section.title}-${section.pageNumbers.join("-")}`}>{section.title} <span>Trang {section.pageNumbers.join(", ")}</span></li>)}</ul></div>
-        </div>
+        <p>
+          Backend đã giữ ranh giới từng trang và metadata element. Chat có thể dùng
+          slide hiện tại hoặc ngữ cảnh toàn bài.
+        </p>
+        <div><strong>Element types</strong><div className="keyword-list">{elementTypes.map((type) => <span key={type}>{type}</span>)}</div></div>
       </div>
     </details>
   );

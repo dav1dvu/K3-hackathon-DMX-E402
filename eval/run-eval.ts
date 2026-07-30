@@ -28,11 +28,17 @@ function evaluate(item: EvalCase, actual: Awaited<ReturnType<typeof generateTuto
   const criticalFailures: string[] = [];
   const answer = actual.answer.toLocaleLowerCase("vi");
   const evidencePages = new Set(item.input.evidence.map((entry) => entry.pageNumber));
-  if (actual.sourcePages.some((page) => !evidencePages.has(page))) criticalFailures.push("INVALID_CITATION");
-  if (item.expectedResult.behavior !== "answer" && !actual.insufficientContext) criticalFailures.push("UNSUPPORTED_ASSERTED_ANSWER");
-  if (item.expectedResult.behavior === "answer" && actual.insufficientContext) failures.push("Expected a grounded answer but received insufficientContext=true.");
-  if (item.expectedResult.behavior !== "answer" && !actual.insufficientContext) failures.push(`Expected ${item.expectedResult.behavior} but model asserted an answer.`);
-  if (!samePages(actual.sourcePages, item.expectedResult.sourcePages)) failures.push(`Expected sourcePages [${item.expectedResult.sourcePages}], received [${actual.sourcePages}].`);
+  const actualPages = [...new Set(actual.citations.flatMap((citation) => {
+    const pages: number[] = [];
+    for (let page = citation.page_start; page <= citation.page_end; page += 1) pages.push(page);
+    return pages;
+  }))];
+  if (actualPages.some((page) => !evidencePages.has(page))) criticalFailures.push("INVALID_CITATION");
+  const isInsufficient = actual.status === "insufficient_context";
+  if (item.expectedResult.behavior !== "answer" && !isInsufficient) criticalFailures.push("UNSUPPORTED_ASSERTED_ANSWER");
+  if (item.expectedResult.behavior === "answer" && isInsufficient) failures.push("Expected a grounded answer but received status=insufficient_context.");
+  if (item.expectedResult.behavior !== "answer" && !isInsufficient) failures.push(`Expected ${item.expectedResult.behavior} but model asserted an answer.`);
+  if (!samePages(actualPages, item.expectedResult.sourcePages)) failures.push(`Expected sourcePages [${item.expectedResult.sourcePages}], received [${actualPages}].`);
   if (item.expectedResult.mustContainAny.length && !item.expectedResult.mustContainAny.some((term) => answer.includes(term.toLocaleLowerCase("vi")))) failures.push(`Answer contains none of: ${item.expectedResult.mustContainAny.join(", ")}.`);
   const forbidden = item.expectedResult.mustNotContain.filter((term) => answer.includes(term.toLocaleLowerCase("vi")));
   if (forbidden.length) failures.push(`Answer contains forbidden term(s): ${forbidden.join(", ")}.`);

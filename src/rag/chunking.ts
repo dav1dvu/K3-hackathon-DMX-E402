@@ -6,6 +6,7 @@ const DEFAULT_OVERLAP_WORDS = 18;
 
 export function chunkPages(
   pages: PageContent[],
+  documentId = "document",
   chunkWords = DEFAULT_CHUNK_WORDS,
   overlapWords = DEFAULT_OVERLAP_WORDS,
 ): DocumentChunk[] {
@@ -19,11 +20,16 @@ export function chunkPages(
       const content = words.slice(start, start + chunkWords).join(" ");
       chunks.push({
         id: `page-${page.pageNumber}-chunk-${index}`,
+        documentId: page.documentId ?? documentId,
         pageNumber: page.pageNumber,
+        pageStart: page.pageNumber,
+        pageEnd: page.pageNumber,
         content,
         sourceType: page.sourceType,
         title: page.title,
-        terms: tokenize(`${page.title} ${content}`),
+        section: page.section ?? page.title,
+        topic: page.topic ?? page.title,
+        terms: tokenize(`${page.title} ${page.section ?? ""} ${page.topic ?? ""} ${content}`),
       });
       if (start + chunkWords >= words.length) break;
     }

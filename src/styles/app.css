@@ -22,7 +22,7 @@ body { background: #f4f9ff; }
 * { scrollbar-width: thin; scrollbar-color: #b9d4e8 transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-thumb { background: #b9d4e8; border: 2px solid transparent; border-radius: 999px; background-clip: padding-box; }
-button, textarea, input { font: inherit; }
+button, textarea, input, select { font: inherit; }
 button { color: inherit; }
 button:focus-visible, textarea:focus-visible, input:focus-visible {
   outline: 3px solid rgba(39, 136, 232, 0.25);
@@ -33,6 +33,14 @@ button:focus-visible, textarea:focus-visible, input:focus-visible {
   padding: 0 !important; margin: -1px !important; overflow: hidden !important;
   clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important;
 }
+
+.standalone-state {
+  min-height: 100dvh; display: grid; place-items: center; align-content: center; gap: 12px;
+  padding: 32px; color: var(--muted); text-align: center;
+  background: radial-gradient(circle at center, rgba(255,255,255,.95), transparent 68%), #eef7ff;
+}
+.standalone-state h1 { margin: 0; color: var(--ink); font-size: clamp(1.55rem,4vw,2.35rem); }
+.standalone-state p { max-width: 560px; margin: 0; line-height: 1.6; }
 
 /* Upload */
 .upload-screen {
@@ -114,7 +122,9 @@ button:focus-visible, textarea:focus-visible, input:focus-visible {
 .app-brand span:last-child { margin-top: 4px; color: var(--blue); font-size: .57rem; font-weight: 850; letter-spacing: .12em; }
 .file-heading { width: 100%; justify-content: center; justify-self: center; gap: 8px; min-width: 0; color: #5e7890; font-size: .78rem; }
 .file-heading > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-heading select { min-width: 0; max-width: 320px; padding: 7px 28px 7px 9px; color: #4d6c84; background: white; border: 1px solid #cfe1ef; border-radius: 9px; }
 .file-heading small, .mobile-document-bar small { flex: 0 0 auto; padding: 4px 7px; color: var(--blue-dark); background: var(--blue-soft); border-radius: 999px; font-size: .63rem; font-weight: 750; }
+.backend-source { justify-self: end; display: flex; align-items: center; gap: 7px; color: #668197; font-size: .72rem; font-weight: 720; }
 .reset-button {
   justify-self: end; gap: 7px; min-height: 38px; padding: 8px 12px; color: #55728b; background: white;
   border: 1px solid #cfe1ef; border-radius: 10px; font-size: .8rem; font-weight: 720; cursor: pointer;
@@ -159,8 +169,11 @@ button:focus-visible, textarea:focus-visible, input:focus-visible {
 .knowledge-status strong { color: #315d7d; font-size: .72rem; }
 .knowledge-status span { color: var(--muted); font-size: .65rem; }
 .knowledge-status.is-error { color: var(--danger); font-size: .74rem; }
+.knowledge-status.is-error button { justify-self: start; padding: 5px 8px; color: var(--danger); background: white; border: 1px solid #efbec5; border-radius: 7px; cursor: pointer; }
 .knowledge-progress { height: 4px; overflow: hidden; background: #e5f1f9; border-radius: 99px; }
 .knowledge-progress > span { height: 100%; display: block; background: var(--blue); transition: width 180ms ease; }
+.knowledge-progress > .is-indeterminate { width: 40%; animation: processing-slide 1.1s ease-in-out infinite alternate; }
+@keyframes processing-slide { from { transform: translateX(-20%); } to { transform: translateX(170%); } }
 .lesson-overview { overflow: hidden; }
 .lesson-overview summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; cursor: pointer; list-style: none; }
 .lesson-overview summary::-webkit-details-marker { display: none; }
@@ -225,14 +238,21 @@ button:focus-visible, textarea:focus-visible, input:focus-visible {
 .message-list { display: grid; gap: 17px; }
 .chat-message { display: flex; align-items: flex-start; gap: 8px; }
 .chat-message.user { justify-content: flex-end; }
-.chat-message > div { max-width: 88%; }
+.chat-message > div { min-width: 0; max-width: 92%; }
 .message-avatar { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; color: var(--blue); background: var(--blue-soft); border-radius: 9px; }
 .message-author { display: block; margin-bottom: 4px; color: #8197a9; font-size: .63rem; font-weight: 750; }
 .chat-message.user .message-author { text-align: right; }
-.chat-message p { margin: 0; padding: 10px 12px; color: #405f77; background: #eef6fc; border-radius: 4px 12px 12px; font-size: .77rem; line-height: 1.55; white-space: pre-wrap; }
+.chat-message p { margin: 0; padding: 11px 13px; color: #36566f; background: #f1f7fc; border: 1px solid #dcebf5; border-radius: 4px 12px 12px; font-size: .77rem; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-line; }
 .chat-message.user p { color: white; background: linear-gradient(145deg,#45a0ed,#2184df); border-radius: 12px 4px 12px 12px; }
 .message-source { display: inline-block; margin-top: 6px; padding: 4px 7px; color: var(--blue-dark); background: var(--blue-soft); border-radius: 999px; font-size: .59rem; font-weight: 720; }
 .insufficient-label { display: block; margin-top: 6px; color: var(--danger); font-size: .61rem; font-weight: 720; }
+.partial-label { display: block; margin-top: 6px; color: #9a6700; font-size: .61rem; font-weight: 720; }
+.citation-group { margin-top: 9px; }
+.citation-group summary { width: max-content; color: #648198; cursor: pointer; font-size: .63rem; font-weight: 700; list-style-position: inside; }
+.citation-group summary:hover { color: var(--blue-dark); }
+.message-citations { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.message-citations button { min-width: 58px; border: 1px solid #bfdbfe; border-radius: 8px; background: #f3f8ff; color: #1d5fbf; cursor: pointer; font: inherit; font-size: .64rem; font-weight: 720; padding: 6px 9px; white-space: nowrap; }
+.message-citations button:hover, .message-citations button:focus-visible { background: #dbeafe; border-color: #60a5fa; outline: none; }
 .typing-indicator { display: flex; align-items: center; gap: 7px; margin-top: 16px; }
 .typing-indicator > div:nth-child(2) { display: flex; gap: 3px; padding: 10px 12px; background: #eef6fc; border-radius: 4px 12px 12px; }
 .typing-indicator > div:nth-child(2) span { width: 5px; height: 5px; background: #6f9cbc; border-radius: 50%; animation: pulse 900ms infinite alternate; }

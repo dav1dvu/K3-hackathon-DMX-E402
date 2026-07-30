@@ -1,5 +1,44 @@
 # Mini Hackathon AI — Batch 03
 
+## Chạy AI Tutor với PDF trong `data/slide`
+
+Ứng dụng tự phát hiện các file `.pdf` trong `data/slide`; người dùng không cần upload.
+Nếu có nhiều file, tài liệu đầu tiên theo tên được mở mặc định và có thể đổi bằng danh sách trên header.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+npm install
+Copy-Item .env.example .env
+# Điền cấu hình LLM server-side và PYTHON_EXECUTABLE=.venv\Scripts\python.exe trong .env
+npm run dev
+```
+
+Frontend chạy ở `http://127.0.0.1:5173`, backend ở `http://127.0.0.1:3001`.
+Backend gọi `unstructured.partition.pdf`, giữ `text`, `filename`, `page_number`, `element_type`,
+nhóm theo trang và cache JSON trong `data/processed`. Cache chỉ được tạo lại khi kích thước hoặc
+thời gian sửa PDF thay đổi. Trên Windows, đặt `PYTHON_EXECUTABLE` nếu lệnh Python không phải `python`.
+Nên dùng virtual environment vì PDF extras có dependency nặng. PDF có slide ảnh cần Tesseract OCR
+trên PATH (ví dụ `conda install -c conda-forge tesseract`);
+worker tự nhận thư mục `share/tessdata` của môi trường Python hiện tại.
+
+Các lệnh kiểm tra:
+
+```powershell
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
+
+API slide:
+
+- `GET /api/slides/documents`
+- `GET /api/slides/documents/{document_id}`
+- `GET /api/slides/documents/{document_id}/file`
+- `GET /api/slides/documents/{document_id}/slides`
+- `POST /api/slides/documents/{document_id}/chat`
+
 **SPEC → Prototype → Demo.** Đây không phải cuộc thi code — đây là cuộc thi **tư duy sản phẩm AI**.
 
 - Thời lượng: **1,5 ngày** (một ngày build + một buổi demo)

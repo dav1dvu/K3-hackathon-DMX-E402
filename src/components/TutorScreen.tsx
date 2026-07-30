@@ -2,13 +2,18 @@ import { Document, Page, pdfjs } from "react-pdf";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import type { ChatMessage, DocumentKnowledge, IngestionProgress, PdfSource, QueryScope } from "../types";
+import type {
+  ChatMessage,
+  PdfSource,
+  ProcessedSlidesResponse,
+  SlideDocumentSummary,
+} from "../types";
 import { ChatPanel } from "./ChatPanel";
-import { FileIcon, MenuIcon, RotateIcon, SparkleIcon } from "./icons";
+import { FileIcon, MenuIcon, SparkleIcon } from "./icons";
+import { KnowledgePanel } from "./KnowledgePanel";
 import { SlideNavigation } from "./SlideNavigation";
 import { SlideViewer } from "./SlideViewer";
 import { ThumbnailSidebar } from "./ThumbnailSidebar";
-import { KnowledgePanel } from "./KnowledgePanel";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -16,25 +21,26 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 type TutorScreenProps = {
+  documents: SlideDocumentSummary[];
+  selectedDocumentId: string;
   fileName: string;
-  pdfSource: PdfSource | null;
+  pdfSource: PdfSource;
   currentPage: number;
   totalPages: number;
   messages: ChatMessage[];
   question: string;
-  scope: QueryScope;
   isBotTyping: boolean;
-  knowledge: DocumentKnowledge | null;
-  ingestionProgress: IngestionProgress | null;
-  ingestionError: string;
+  isProcessing: boolean;
+  processedSlides: ProcessedSlidesResponse | null;
+  processingError: string;
   onDocumentLoad: (pdf: PDFDocumentProxy) => void;
+  onSelectDocument: (documentId: string) => void;
   onSelectPage: (pageNumber: number) => void;
   onPrevious: () => void;
   onNext: () => void;
-  onScopeChange: (scope: QueryScope) => void;
   onQuestionChange: (value: string) => void;
   onSendQuestion: (question: string) => void;
-  onReset: () => void;
+  onRetry: () => void;
 };
 
 function DocumentLoading() {
@@ -42,44 +48,45 @@ function DocumentLoading() {
     <div className="document-state" role="status">
       <span className="spinner" />
       <strong>Đang mở tài liệu PDF...</strong>
-      <p>PDF.js đang chuẩn bị nội dung và lớp văn bản.</p>
+      <p>PDF.js đang chuẩn bị trang hiển thị và lớp văn bản.</p>
     </div>
   );
 }
 
-function DocumentError({ onReset }: { onReset: () => void }) {
+function DocumentError({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="document-state document-error" role="alert">
       <FileIcon width={38} height={38} />
       <strong>Không thể đọc tài liệu PDF</strong>
       <p>File có thể bị hỏng, được mã hóa hoặc không phải PDF hợp lệ.</p>
-      <button className="button button-primary" type="button" onClick={onReset}>
-        Chọn file khác
+      <button className="button button-primary" type="button" onClick={onRetry}>
+        Thử lại
       </button>
     </div>
   );
 }
 
 export function TutorScreen({
+  documents,
+  selectedDocumentId,
   fileName,
   pdfSource,
   currentPage,
   totalPages,
   messages,
   question,
-  scope,
   isBotTyping,
-  knowledge,
-  ingestionProgress,
-  ingestionError,
+  isProcessing,
+  processedSlides,
+  processingError,
   onDocumentLoad,
+  onSelectDocument,
   onSelectPage,
   onPrevious,
   onNext,
-  onScopeChange,
   onQuestionChange,
   onSendQuestion,
-  onReset,
+  onRetry,
 }: TutorScreenProps) {
   return (
     <main className="tutor-screen">
@@ -89,12 +96,21 @@ export function TutorScreen({
           <div><strong>Slidewise</strong><span>AI PDF TUTOR</span></div>
         </div>
         <div className="file-heading" title={fileName}>
-          <FileIcon /><span>{fileName}</span>
+          <FileIcon />
+          {documents.length > 1 ? (
+            <select
+              aria-label="Chọn tài liệu"
+              value={selectedDocumentId}
+              onChange={(event) => onSelectDocument(event.target.value)}
+            >
+              {documents.map((document) => (
+                <option key={document.id} value={document.id}>{document.filename}</option>
+              ))}
+            </select>
+          ) : <span>{fileName}</span>}
           {totalPages > 0 && <small>{totalPages} trang</small>}
         </div>
-        <button className="reset-button" type="button" onClick={onReset}>
-          <RotateIcon /><span>Tải file khác</span>
-        </button>
+        <div className="backend-source"><span className="status-dot" />data/slide</div>
       </header>
 
       <div className="mobile-document-bar">
@@ -106,7 +122,7 @@ export function TutorScreen({
         className="pdf-document"
         file={pdfSource}
         loading={<DocumentLoading />}
-        error={<DocumentError onReset={onReset} />}
+        error={<DocumentError onRetry={onRetry} />}
         onLoadSuccess={onDocumentLoad}
       >
         <div className="learning-layout">
@@ -117,7 +133,12 @@ export function TutorScreen({
             PageComponent={Page}
           />
           <div className="viewer-column">
-            <KnowledgePanel knowledge={knowledge} progress={ingestionProgress} error={ingestionError} />
+            <KnowledgePanel
+              processedSlides={processedSlides}
+              isProcessing={isProcessing}
+              error={processingError}
+              onRetry={onRetry}
+            />
             <SlideViewer pageNumber={currentPage} PageComponent={Page} />
             <SlideNavigation
               currentPage={currentPage}
@@ -130,13 +151,12 @@ export function TutorScreen({
             pageNumber={currentPage}
             messages={messages}
             question={question}
-            scope={scope}
             isBotTyping={isBotTyping}
-            isKnowledgeReady={Boolean(knowledge)}
-            ingestionFailed={Boolean(ingestionError)}
-            onScopeChange={onScopeChange}
+            isKnowledgeReady={Boolean(processedSlides)}
+            ingestionFailed={Boolean(processingError)}
             onQuestionChange={onQuestionChange}
             onSend={onSendQuestion}
+            onCitationClick={onSelectPage}
           />
         </div>
       </Document>

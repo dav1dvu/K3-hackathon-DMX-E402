@@ -1,12 +1,15 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { answerFromDocument } from "./rag/grounding";
 import App from "./App";
 
-const tutorMocks = vi.hoisted(() => ({ askTutor: vi.fn() }));
+const apiMocks = vi.hoisted(() => ({
+  listSlideDocuments: vi.fn(),
+  getProcessedSlides: vi.fn(),
+  askTutor: vi.fn(),
+}));
 
-vi.mock("./services/tutorApi", () => ({ askTutor: tutorMocks.askTutor }));
+vi.mock("./services/tutorApi", () => apiMocks);
 
 vi.mock("react-pdf", async () => {
   const React = await import("react");
@@ -16,38 +19,15 @@ vi.mock("react-pdf", async () => {
     onLoadSuccess,
   }: {
     children: ReactNode;
-    onLoadSuccess?: (pdf: {
-      numPages: number;
-      getPage: (pageNumber: number) => Promise<{
-        getTextContent: () => Promise<{ items: Array<{ str: string; hasEOL: boolean }> }>;
-        getOperatorList: () => Promise<{ fnArray: number[] }>;
-      }>;
-    }) => void;
+    onLoadSuccess?: (pdf: { numPages: number }) => void;
   }) {
     React.useEffect(() => {
-      onLoadSuccess?.({
-        numPages: 5,
-        getPage: async (pageNumber) => ({
-          getTextContent: async () => ({
-            items: [{
-              str: `Trang ${pageNumber} trình bày machine learning, dữ liệu huấn luyện và cách đánh giá mô hình bằng precision và recall.`,
-              hasEOL: false,
-            }],
-          }),
-          getOperatorList: async () => ({ fnArray: [] }),
-        }),
-      });
+      onLoadSuccess?.({ numPages: 5 });
     }, [onLoadSuccess]);
     return <div data-testid="pdf-document">{children}</div>;
   }
 
-  function Page({
-    pageNumber,
-    renderTextLayer,
-  }: {
-    pageNumber: number;
-    renderTextLayer?: boolean;
-  }) {
+  function Page({ pageNumber, renderTextLayer }: { pageNumber: number; renderTextLayer?: boolean }) {
     return (
       <div data-testid={`pdf-page-${pageNumber}`} data-text-layer={String(renderTextLayer)}>
         Nội dung PDF trang {pageNumber}
@@ -58,91 +38,113 @@ vi.mock("react-pdf", async () => {
   return {
     Document,
     Page,
-    pdfjs: {
-      GlobalWorkerOptions: { workerSrc: "" },
-      OPS: { paintImageXObject: 1, paintInlineImageXObject: 2, paintImageMaskXObject: 3 },
-    },
+    pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
   };
 });
 
-describe("AI PDF Tutor MVP", () => {
+const documents = [
+  { id: "d2-slide-hackathon", filename: "d2-slide-hackathon.pdf", title: "D2 Slide Hackathon", url: "/api/slides/documents/d2-slide-hackathon/file" },
+  { id: "day01-slide-blue-v0", filename: "day01-slide-blue-v0.pdf", title: "Day01 Slide Blue V0", url: "/api/slides/documents/day01-slide-blue-v0/file" },
+];
+
+const processed = {
+  document_id: documents[0].id,
+  filename: documents[0].filename,
+  status: "ready" as const,
+  total_pages: 5,
+  slides: Array.from({ length: 5 }, (_, index) => ({
+    filename: documents[0].filename,
+    page_number: index + 1,
+    text: `Slide ${index + 1}`,
+    element_types: ["NarrativeText"],
+  })),
+};
+
+describe("automatic slide AI Tutor flow", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
-    tutorMocks.askTutor.mockImplementation(({ index, question, scope, currentPage }) => (
-      Promise.resolve(answerFromDocument(index, { question, scope, currentPage }))
-    ));
+    apiMocks.listSlideDocuments.mockResolvedValue(documents);
+    apiMocks.getProcessedSlides.mockResolvedValue(processed);
+    apiMocks.askTutor.mockImplementation(({ currentPage }) => Promise.resolve({
+      answer: `Nội dung được lấy từ slide ${currentPage}.`,
+      citations: [{ page_number: currentPage, reason: "Slide hiện tại hỗ trợ câu trả lời." }],
+      insufficient_context: false,
+    }));
   });
 
   afterEach(() => {
     cleanup();
-    vi.runOnlyPendingTimers();
-    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
-  async function openSampleDocument() {
+  async function openDefaultDocument() {
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: /dùng tài liệu mẫu/i }));
-    expect(screen.getByText(/đang xử lý tài liệu/i)).toBeInTheDocument();
-    await act(async () => vi.advanceTimersByTime(1000));
-    await act(async () => {
-      for (let index = 0; index < 30; index += 1) await Promise.resolve();
-    });
-    expect(screen.getByText(/đã lập index 5 trang/i)).toBeInTheDocument();
+    expect(screen.getByText(/đang tìm tài liệu pdf/i)).toBeInTheDocument();
+    await screen.findByText(/nội dung bài học đã sẵn sàng/i);
+    expect(apiMocks.getProcessedSlides).toHaveBeenCalledWith("d2-slide-hackathon");
   }
 
-  it("rejects a non-PDF file", () => {
-    render(<App />);
-    const input = screen.getByLabelText(/chọn file pdf/i);
-    const invalidFile = new File(["hello"], "notes.txt", { type: "text/plain" });
-    fireEvent.change(input, { target: { files: [invalidFile] } });
-    expect(screen.getByRole("alert")).toHaveTextContent(/file không hợp lệ/i);
+  it("uses the first discovered PDF automatically and offers simple selection", async () => {
+    await openDefaultDocument();
+    expect(screen.queryByLabelText(/chọn file pdf/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /chọn tài liệu/i })).toHaveValue("d2-slide-hackathon");
+    expect(screen.getByTestId("pdf-document")).toBeInTheDocument();
   });
 
-  it("renders a selectable text layer and navigates PDF pages", async () => {
-    await openSampleDocument();
+  it("shows the required empty state when data/slide has no PDF", async () => {
+    apiMocks.listSlideDocuments.mockResolvedValue([]);
+    render(<App />);
+    expect(await screen.findByText(/không tìm thấy tài liệu pdf trong thư mục data\/slide/i)).toBeInTheDocument();
+    expect(apiMocks.getProcessedSlides).not.toHaveBeenCalled();
+  });
+
+  it("navigates Previous/Next and never exceeds the PDF page range", async () => {
+    await openDefaultDocument();
     const previous = screen.getByRole("button", { name: /trang trước/i });
     const next = screen.getByRole("button", { name: /trang tiếp theo/i });
     expect(previous).toBeDisabled();
-    expect(next).toBeEnabled();
-    expect(screen.getAllByTestId("pdf-page-1").some((page) => page.dataset.textLayer === "true")).toBe(true);
+    expect(screen.getByText("1", { selector: ".page-indicator strong" })).toBeInTheDocument();
+    expect(screen.getByText("/ 5", { selector: ".page-indicator span:last-child" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /mở trang 5/i }));
     expect(screen.getByRole("heading", { name: "Trang 5" })).toBeInTheDocument();
     expect(next).toBeDisabled();
-    expect(previous).toBeEnabled();
+    fireEvent.click(next);
+    expect(screen.getByRole("heading", { name: "Trang 5" })).toBeInTheDocument();
   });
 
-  it("keeps chat history by page and answers for the page at send time", async () => {
-    await openSampleDocument();
-    const input = screen.getByLabelText(/câu hỏi về trang 1/i);
-    fireEvent.change(input, { target: { value: "Tóm tắt trang này." } });
+  it("sends the current page, renders [Slide 5], and keeps history after page changes", async () => {
+    await openDefaultDocument();
+    fireEvent.click(screen.getByRole("button", { name: /mở trang 5/i }));
+    const input = screen.getByLabelText(/câu hỏi tại slide 5/i);
+    fireEvent.change(input, { target: { value: "Slide này đang nói về gì?" } });
     fireEvent.click(screen.getByRole("button", { name: /gửi câu hỏi/i }));
-    expect(screen.getByText(/trợ lý đang trả lời/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /trang tiếp theo/i }));
-    expect(screen.getByText(/chỉ dùng bằng chứng từ trang 2/i)).toBeInTheDocument();
-    await act(async () => { await Promise.resolve(); });
+    await waitFor(() => expect(apiMocks.askTutor).toHaveBeenCalledWith(expect.objectContaining({
+      documentId: "d2-slide-hackathon",
+      currentPage: 5,
+      question: "Slide này đang nói về gì?",
+      history: [],
+    })));
+    expect(await screen.findByText(/nội dung được lấy từ slide 5/i)).toBeInTheDocument();
+    const citations = screen.getByLabelText(/nguồn trích dẫn/i);
+    expect(within(citations).getByRole("button", { name: /slide 5/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /trang trước/i }));
-    expect(screen.getByText(/trang 1 trình bày machine learning/i, { selector: ".chat-message.assistant p" })).toBeInTheDocument();
-    expect(screen.getByText(/nguồn · trang 1/i)).toBeInTheDocument();
-    expect(screen.getByText("Tóm tắt trang này.")).toBeInTheDocument();
+    expect(screen.getByText("Slide này đang nói về gì?")).toBeInTheDocument();
+    expect(screen.getByText(/nội dung được lấy từ slide 5/i)).toBeInTheDocument();
   });
 
-  it("switches to whole-lesson retrieval and cites multiple pages", async () => {
-    await openSampleDocument();
-    fireEvent.click(screen.getByRole("button", { name: /toàn bộ bài/i }));
-    const input = screen.getByLabelText(/câu hỏi về toàn bộ bài học/i);
-    fireEvent.change(input, { target: { value: "Toàn bài nói gì về precision và recall?" } });
+  it("sends prior conversation as history for a whole-lesson follow-up", async () => {
+    await openDefaultDocument();
+    const input = screen.getByLabelText(/câu hỏi tại slide 1/i);
+    fireEvent.change(input, { target: { value: "Slide này nói gì?" } });
+    fireEvent.click(screen.getByRole("button", { name: /gửi câu hỏi/i }));
+    await screen.findByText(/nội dung được lấy từ slide 1/i);
+
+    fireEvent.change(input, { target: { value: "Tóm tắt toàn bộ bài học." } });
     fireEvent.click(screen.getByRole("button", { name: /gửi câu hỏi/i }));
     await act(async () => { await Promise.resolve(); });
-    expect(screen.getByText(/nguồn · trang 1, 2, 3, 4/i)).toBeInTheDocument();
-  });
-
-  it("resets the PDF and all page chat state", async () => {
-    await openSampleDocument();
-    fireEvent.click(screen.getByRole("button", { name: /tải file khác/i }));
-    expect(screen.getByRole("heading", { name: /ai tutor đọc cùng/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /dùng tài liệu mẫu/i })).toBeEnabled();
+    expect(apiMocks.askTutor.mock.calls[1][0].history).toHaveLength(2);
+    expect(apiMocks.askTutor.mock.calls[1][0].question).toBe("Tóm tắt toàn bộ bài học.");
   });
 });

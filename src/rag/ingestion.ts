@@ -124,8 +124,8 @@ export async function ingestPdfDocument(
     currentPage: pdf.numPages,
     stage: "indexing",
   });
-  const index = createDocumentIndex(pages);
-  const overview = createLessonOverview(pages, fileName.replace(/\.pdf$/i, ""));
+  const index = createDocumentIndex(pages, fileName);
+  const overview = createLessonOverview(index.pages, fileName.replace(/\.pdf$/i, ""));
   options.onProgress?.({
     processedPages: pdf.numPages,
     totalPages: pdf.numPages,

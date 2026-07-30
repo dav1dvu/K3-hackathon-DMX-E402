@@ -1,52 +1,53 @@
 import type { DocumentIndex, GroundedAnswer, QueryScope } from "../types";
-import { extractMentionedPages, searchDocument } from "./indexing";
+import { retrieveDocument } from "./indexing";
+import { citationsFromChunks, sanitizeAnswer } from "./post-processing";
 import { splitSentences, truncate } from "./text";
 
-export type AnswerRequest = {
-  question: string;
-  scope: QueryScope;
-  currentPage: number;
-};
+export type AnswerRequest = { question: string; scope: QueryScope; currentPage: number };
 
 function evidenceFromContent(content: string) {
   const sentences = splitSentences(content);
   return truncate(sentences.slice(0, 2).join(" ") || content, 360);
 }
 
+function insufficient(missingFields: string[]): GroundedAnswer {
+  return {
+    status: "insufficient_context",
+    answer: "Tài liệu hiện tại chưa cung cấp đủ thông tin để trả lời chính xác câu hỏi này.",
+    citations: [],
+    missing_fields: missingFields,
+  };
+}
+
 export function answerFromDocument(index: DocumentIndex, request: AnswerRequest): GroundedAnswer {
-  const results = searchDocument(index, { ...request, limit: 4 });
-  const mentionedPages = extractMentionedPages(request.question);
-  const missingPages = mentionedPages.filter(
-    (pageNumber) => !index.pages.some((page) => page.pageNumber === pageNumber && page.content),
-  );
+  const retrieval = retrieveDocument(index, { ...request, limit: 8 });
+  if (!retrieval.results.length) return insufficient(retrieval.missingFields);
 
-  if (missingPages.length > 0) {
-    return {
-      answer: `Tài liệu không có đủ nội dung để trả lời vì thiếu dữ liệu ở trang ${missingPages.join(", ")}.`,
-      sourcePages: [],
-      insufficientContext: true,
-    };
+  const chunks = retrieval.results.map(({ chunk }) => chunk);
+  const isWholeLessonOverview = retrieval.plan.intent === "lesson_overview" && request.scope === "whole_lesson";
+  const citations = isWholeLessonOverview
+    ? index.sections.map((section) => ({ page_start: section.pageStart, page_end: section.pageEnd, section: section.section }))
+    : citationsFromChunks(chunks);
+  let answer: string;
+  if (isWholeLessonOverview) {
+    const sections = index.sections;
+    const firstPage = Math.min(...sections.map((section) => section.pageStart));
+    const lastPage = Math.max(...sections.map((section) => section.pageEnd));
+    answer = `Tài liệu gồm ${sections.length} chủ đề chính, được trình bày từ trang ${firstPage} đến trang ${lastPage}. Chọn một trang trong phần nguồn bên dưới để xem nội dung chi tiết.`;
+  } else if (retrieval.plan.intent === "locate_topic") {
+    answer = chunks.map((chunk) => (
+      `Nội dung này nằm ở phần “${chunk.section}”, trang ${chunk.pageStart}${chunk.pageEnd === chunk.pageStart ? "" : `–${chunk.pageEnd}`}. ${evidenceFromContent(chunk.content)}`
+    )).join("\n");
+  } else if (retrieval.plan.intent === "specific_page") {
+    answer = chunks.map((chunk) => `Trang ${chunk.pageNumber} — ${chunk.section}: ${evidenceFromContent(chunk.content)}`).join("\n");
+  } else {
+    answer = chunks.map((chunk) => `Trang ${chunk.pageNumber} — ${chunk.section}: ${evidenceFromContent(chunk.content)}`).join("\n");
   }
 
-  if (results.length === 0) {
-    const scopeDescription = request.scope === "current_page"
-      ? `trang ${request.currentPage}`
-      : "toàn bộ tài liệu";
-    return {
-      answer: `Tôi chưa tìm thấy thông tin trong ${scopeDescription} để trả lời câu hỏi này. Tài liệu hiện không cung cấp bằng chứng phù hợp.`,
-      sourcePages: [],
-      insufficientContext: true,
-    };
-  }
-
-  const evidence = results.map(({ chunk }) => ({
-    pageNumber: chunk.pageNumber,
-    text: evidenceFromContent(chunk.content),
-  }));
-  const sourcePages = [...new Set(evidence.map((item) => item.pageNumber))].sort((a, b) => a - b);
-  const answer = evidence
-    .map((item) => `Trang ${item.pageNumber}: ${item.text}`)
-    .join("\n\n");
-
-  return { answer, sourcePages, insufficientContext: false };
+  return {
+    status: retrieval.coverage === "partial" ? "partially_answered" : "answered",
+    answer: sanitizeAnswer(answer),
+    citations,
+    missing_fields: retrieval.missingFields,
+  };
 }

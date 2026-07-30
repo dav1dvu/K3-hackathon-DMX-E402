@@ -44,6 +44,20 @@ export type GroundedAnswer = {
   answer: string;
   sourcePages: number[];
   insufficientContext: boolean;
+  llm?: {
+    provider: string;
+    model: string;
+    usage: {
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+    latencyMs: number;
+    finishReason: string | null;
+    requestId: string;
+    providerRequestId: string | null;
+    attempts: number;
+  };
 };
 
 export type LessonSection = {

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { TutorScreen } from "./components/TutorScreen";
 import { UploadScreen } from "./components/UploadScreen";
-import { answerFromDocument } from "./rag/grounding";
 import { ingestPdfDocument } from "./rag/ingestion";
+import { askTutor } from "./services/tutorApi";
 import type {
   AppScreen,
   ChatMessage,
@@ -14,7 +14,6 @@ import type {
 } from "./types";
 
 const PROCESSING_DELAY_MS = 1000;
-const BOT_TYPING_DELAY_MS = 800;
 const SAMPLE_FILE_NAME = "Strategyn JTBD Playbook.pdf";
 const SAMPLE_FILE_URL = "/sample-document.pdf";
 
@@ -42,6 +41,7 @@ export default function App() {
   const [ingestionError, setIngestionError] = useState("");
   const timeoutsRef = useRef<number[]>([]);
   const ingestionRunRef = useRef(0);
+  const chatRunRef = useRef(0);
 
   const activeConversationKey = conversationKey(scope, currentPage);
   const activeMessages = useMemo(
@@ -105,9 +105,11 @@ export default function App() {
 
   const handleSendQuestion = (submittedQuestion: string) => {
     if (!knowledge) return;
+    const runId = chatRunRef.current;
     const pageAtSendTime = currentPage;
     const scopeAtSendTime = scope;
     const keyAtSendTime = conversationKey(scopeAtSendTime, pageAtSendTime);
+    const historyAtSendTime = activeMessages;
     const userMessage: ChatMessage = {
       id: createMessageId("user"),
       pageNumber: pageAtSendTime,
@@ -119,13 +121,15 @@ export default function App() {
     setQuestion("");
     setTypingKeys((previous) => [...previous, keyAtSendTime]);
 
-    const timeoutId = window.setTimeout(() => {
-      const groundedAnswer = answerFromDocument(knowledge.index, {
-        question: submittedQuestion,
-        scope: scopeAtSendTime,
-        currentPage: pageAtSendTime,
-      });
-      const assistantMessage: ChatMessage = {
+    void askTutor({
+      index: knowledge.index,
+      question: submittedQuestion,
+      scope: scopeAtSendTime,
+      currentPage: pageAtSendTime,
+      history: historyAtSendTime,
+    }).then((groundedAnswer) => {
+      if (chatRunRef.current !== runId) return;
+      setMessages((previous) => [...previous, {
         id: createMessageId("assistant"),
         pageNumber: pageAtSendTime,
         scope: scopeAtSendTime,
@@ -133,17 +137,30 @@ export default function App() {
         content: groundedAnswer.answer,
         sourcePages: groundedAnswer.sourcePages,
         insufficientContext: groundedAnswer.insufficientContext,
-      };
-      setMessages((previous) => [...previous, assistantMessage]);
-      setTypingKeys((previous) => previous.filter((key) => key !== keyAtSendTime));
-    }, BOT_TYPING_DELAY_MS);
-    timeoutsRef.current.push(timeoutId);
+      }]);
+    }).catch(() => {
+      if (chatRunRef.current !== runId) return;
+      setMessages((previous) => [...previous, {
+        id: createMessageId("assistant"),
+        pageNumber: pageAtSendTime,
+        scope: scopeAtSendTime,
+        role: "assistant",
+        content: "Không thể kết nối tới mô hình ngôn ngữ. Vui lòng thử lại sau.",
+        sourcePages: [],
+        insufficientContext: true,
+      }]);
+    }).finally(() => {
+      if (chatRunRef.current === runId) {
+        setTypingKeys((previous) => previous.filter((key) => key !== keyAtSendTime));
+      }
+    });
   };
 
   const resetApplication = () => {
     timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     timeoutsRef.current = [];
     ingestionRunRef.current += 1;
+    chatRunRef.current += 1;
     setScreen("upload");
     setPdfSource(null);
     setDocumentName("");

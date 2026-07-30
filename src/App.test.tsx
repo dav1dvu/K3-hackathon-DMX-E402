@@ -1,7 +1,12 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { answerFromDocument } from "./rag/grounding";
 import App from "./App";
+
+const tutorMocks = vi.hoisted(() => ({ askTutor: vi.fn() }));
+
+vi.mock("./services/tutorApi", () => ({ askTutor: tutorMocks.askTutor }));
 
 vi.mock("react-pdf", async () => {
   const React = await import("react");
@@ -61,7 +66,12 @@ vi.mock("react-pdf", async () => {
 });
 
 describe("AI PDF Tutor MVP", () => {
-  beforeEach(() => vi.useFakeTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    tutorMocks.askTutor.mockImplementation(({ index, question, scope, currentPage }) => (
+      Promise.resolve(answerFromDocument(index, { question, scope, currentPage }))
+    ));
+  });
 
   afterEach(() => {
     cleanup();
@@ -111,7 +121,7 @@ describe("AI PDF Tutor MVP", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /trang tiếp theo/i }));
     expect(screen.getByText(/chỉ dùng bằng chứng từ trang 2/i)).toBeInTheDocument();
-    await act(async () => vi.advanceTimersByTime(800));
+    await act(async () => { await Promise.resolve(); });
 
     fireEvent.click(screen.getByRole("button", { name: /trang trước/i }));
     expect(screen.getByText(/trang 1 trình bày machine learning/i, { selector: ".chat-message.assistant p" })).toBeInTheDocument();
@@ -125,7 +135,7 @@ describe("AI PDF Tutor MVP", () => {
     const input = screen.getByLabelText(/câu hỏi về toàn bộ bài học/i);
     fireEvent.change(input, { target: { value: "Toàn bài nói gì về precision và recall?" } });
     fireEvent.click(screen.getByRole("button", { name: /gửi câu hỏi/i }));
-    await act(async () => vi.advanceTimersByTime(800));
+    await act(async () => { await Promise.resolve(); });
     expect(screen.getByText(/nguồn · trang 1, 2, 3, 4/i)).toBeInTheDocument();
   });
 

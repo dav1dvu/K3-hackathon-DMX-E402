@@ -33,6 +33,8 @@ export default function App() {
   const chatRunRef = useRef(0);
 
   const selectedDocument = documents.find(({ id }) => id === selectedDocumentId) ?? null;
+  /** Only load PDF viewer when the backend confirmed a PDF exists (url ends with /file) */
+  const pdfUrl = selectedDocument?.url.endsWith("/file") ? selectedDocument.url : null;
 
   const openDocument = useCallback(async (document: SlideDocumentSummary) => {
     const runId = ++documentRunRef.current;
@@ -186,7 +188,7 @@ export default function App() {
       documents={documents}
       selectedDocumentId={selectedDocument.id}
       fileName={selectedDocument.filename}
-      pdfSource={selectedDocument.url}
+      pdfSource={pdfUrl}
       currentPage={currentPage}
       totalPages={totalPages}
       messages={messages}

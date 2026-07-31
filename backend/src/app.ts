@@ -4,32 +4,75 @@ import type { LLMCore } from "./llm/index.js";
 import { LLMError } from "./llm/index.js";
 import { answerSlideQuestion, slideChatRequestSchema } from "./slides/chat-service.js";
 import {
-  SlideDocumentError,
-  SlideDocumentService,
-} from "./slides/document-service.js";
+  JsonSlideDocumentError,
+  JsonSlideDocumentService,
+} from "./slides/json-document-service.js";
 import { generateTutorAnswer, tutorRequestSchema } from "./tutor/grounded-generation.js";
 
+// ---------------------------------------------------------------------------
+// Adapter types — app.ts works against this lightweight interface so tests can
+// inject either the legacy SlideDocumentService or the new JsonSlideDocumentService.
+// ---------------------------------------------------------------------------
+import type { ProcessedSlideDocument } from "./slides/models.js";
+
+export interface ISlideDocumentService {
+  listDocuments(): Promise<Array<{ id: string; filename: string; title: string; url: string }>>;
+  getDocumentDetails(id: string): Promise<{
+    id: string; filename: string; title: string; url: string;
+    status: "ready" | "processing"; total_pages: number;
+  }>;
+  getProcessedDocument(id: string): Promise<ProcessedSlideDocument>;
+  /**
+   * Optional — legacy PDF service exposes filePath; JSON service exposes jsonPath.
+   * Return type is deliberately loose so both implementations satisfy the interface.
+   */
+  getDocument?(id: string): Promise<{ filePath?: string; jsonPath?: string; [key: string]: string | undefined }>;
+}
+
 type ServerAppOptions = {
-  slideDocuments?: SlideDocumentService;
+  slideDocuments?: ISlideDocumentService;
 };
 
-function slideErrorStatus(error: SlideDocumentError) {
+// ---------------------------------------------------------------------------
+// Error helpers — handle both legacy SlideDocumentError and JsonSlideDocumentError
+// ---------------------------------------------------------------------------
+
+function isDocumentError(
+  error: unknown,
+): error is JsonSlideDocumentError {
+  return (
+    error instanceof JsonSlideDocumentError ||
+    (error instanceof Error && "code" in error)
+  );
+}
+
+function documentErrorStatus(error: { code: string }): number {
   if (error.code === "DOCUMENT_NOT_FOUND") return 404;
   if (error.code === "EMPTY_DOCUMENT") return 422;
   return 500;
 }
 
-function slideErrorMessage(error: SlideDocumentError) {
-  if (error.code === "DOCUMENT_NOT_FOUND") return "Không tìm thấy tài liệu PDF.";
-  if (error.code === "EMPTY_DOCUMENT") return "Không trích xuất được nội dung từ tài liệu PDF.";
-  return "Không thể xử lý tài liệu PDF.";
+function documentErrorMessage(error: { code: string }): string {
+  if (error.code === "DOCUMENT_NOT_FOUND") return "Không tìm thấy tài liệu.";
+  if (error.code === "EMPTY_DOCUMENT") return "Tài liệu không có nội dung slide.";
+  if (error.code === "DOCUMENT_INVALID") return "File JSON không hợp lệ.";
+  return "Không thể xử lý tài liệu.";
 }
+
+// ---------------------------------------------------------------------------
+// App factory
+// ---------------------------------------------------------------------------
 
 export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}) {
   const app = express();
-  const slideDocuments = options.slideDocuments ?? new SlideDocumentService();
+  // Default to JSON-based service (no OCR / PDF parsing at runtime)
+  const slideDocuments: ISlideDocumentService =
+    options.slideDocuments ?? new JsonSlideDocumentService();
+
   app.disable("x-powered-by");
   app.use(express.json({ limit: "1mb" }));
+
+  // ── Health ──────────────────────────────────────────────────────────────
 
   app.get("/api/health", (_request, response) => {
     response.json({ ok: true });
@@ -39,6 +82,8 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
     const providers = await llmCore.health_check();
     response.status(providers.some((provider) => provider.ok) ? 200 : 503).json({ providers });
   });
+
+  // ── Document list ────────────────────────────────────────────────────────
 
   app.get("/api/slides/documents", async (_request, response) => {
     try {
@@ -51,19 +96,24 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
       response.status(500).json({
         error: {
           code: "DOCUMENT_DISCOVERY_FAILED",
-          message: "Không thể tìm danh sách tài liệu PDF.",
+          message: "Không thể tìm danh sách tài liệu.",
         },
       });
     }
   });
 
+  // ── Document metadata ────────────────────────────────────────────────────
+
   app.get("/api/slides/documents/:documentId", async (request, response) => {
     try {
       response.json(await slideDocuments.getDocumentDetails(request.params.documentId));
     } catch (error) {
-      if (error instanceof SlideDocumentError) {
-        response.status(slideErrorStatus(error)).json({
-          error: { code: error.code, message: slideErrorMessage(error) },
+      if (isDocumentError(error)) {
+        response.status(documentErrorStatus(error as { code: string })).json({
+          error: {
+            code: (error as { code: string }).code,
+            message: documentErrorMessage(error as { code: string }),
+          },
         });
         return;
       }
@@ -73,9 +123,26 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
     }
   });
 
+  // ── PDF file endpoint ──────────────────────────────────────────────────────
+
   app.get("/api/slides/documents/:documentId/file", async (request, response) => {
     try {
+      if (!slideDocuments.getDocument) {
+        response.status(404).json({
+          error: { code: "FILE_NOT_FOUND", message: "File PDF không tồn tại." },
+        });
+        return;
+      }
       const document = await slideDocuments.getDocument(request.params.documentId);
+      if (!document.filePath) {
+        response.status(404).json({
+          error: {
+            code: "FILE_NOT_FOUND",
+            message: "File PDF chưa được cung cấp. Vui lòng thêm file vào thư mục data/slide.",
+          },
+        });
+        return;
+      }
       response.type("application/pdf");
       response.sendFile(document.filePath, (error) => {
         if (error && !response.headersSent) {
@@ -85,9 +152,12 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
         }
       });
     } catch (error) {
-      if (error instanceof SlideDocumentError) {
-        response.status(slideErrorStatus(error)).json({
-          error: { code: error.code, message: slideErrorMessage(error) },
+      if (isDocumentError(error)) {
+        response.status(documentErrorStatus(error as { code: string })).json({
+          error: {
+            code: (error as { code: string }).code,
+            message: documentErrorMessage(error as { code: string }),
+          },
         });
         return;
       }
@@ -96,6 +166,8 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
       });
     }
   });
+
+  // ── Slide list ───────────────────────────────────────────────────────────
 
   app.get("/api/slides/documents/:documentId/slides", async (request, response) => {
     try {
@@ -108,9 +180,12 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
         slides: lesson.slides,
       });
     } catch (error) {
-      if (error instanceof SlideDocumentError) {
-        response.status(slideErrorStatus(error)).json({
-          error: { code: error.code, message: slideErrorMessage(error) },
+      if (isDocumentError(error)) {
+        response.status(documentErrorStatus(error as { code: string })).json({
+          error: {
+            code: (error as { code: string }).code,
+            message: documentErrorMessage(error as { code: string }),
+          },
         });
         return;
       }
@@ -122,19 +197,22 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
       response.status(500).json({
         error: {
           code: "DOCUMENT_PROCESSING_FAILED",
-          message: "Không thể xử lý tài liệu PDF.",
+          message: "Không thể đọc nội dung tài liệu.",
         },
       });
     }
   });
 
+  // ── Chat ─────────────────────────────────────────────────────────────────
+
   app.post("/api/slides/documents/:documentId/chat", async (request, response) => {
     try {
       const input = slideChatRequestSchema.parse(request.body);
       const lesson = await slideDocuments.getProcessedDocument(request.params.documentId);
+
       if (
-        input.current_page > lesson.total_pages
-        || !lesson.slides.some((slide) => slide.page_number === input.current_page)
+        input.current_page > lesson.total_pages ||
+        !lesson.slides.some((slide) => slide.page_number === input.current_page)
       ) {
         response.status(404).json({
           error: {
@@ -144,8 +222,10 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
         });
         return;
       }
+
       const startedAt = Date.now();
       const answer = await answerSlideQuestion(llmCore, lesson, input);
+
       console.info(JSON.stringify({
         event: "slide_chat_completed",
         documentId: lesson.document_id,
@@ -162,18 +242,20 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
         });
         return;
       }
-      if (error instanceof SlideDocumentError) {
-        response.status(slideErrorStatus(error)).json({
-          error: { code: error.code, message: slideErrorMessage(error) },
+      if (isDocumentError(error)) {
+        response.status(documentErrorStatus(error as { code: string })).json({
+          error: {
+            code: (error as { code: string }).code,
+            message: documentErrorMessage(error as { code: string }),
+          },
         });
         return;
       }
       if (error instanceof LLMError) {
-        const status = error.code === "RATE_LIMITED"
-          ? 503
-          : error.code === "TIMEOUT"
-            ? 504
-            : 502;
+        const status =
+          error.code === "RATE_LIMITED" ? 503
+          : error.code === "TIMEOUT" ? 504
+          : 502;
         response.status(status).json({
           error: {
             code: error.code,
@@ -193,6 +275,8 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
     }
   });
 
+  // ── Tutor (generic) ──────────────────────────────────────────────────────
+
   app.post("/api/tutor/chat", async (request, response) => {
     try {
       const input = tutorRequestSchema.parse(request.body);
@@ -200,21 +284,16 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
     } catch (error) {
       if (error instanceof ZodError) {
         response.status(400).json({
-          error: {
-            code: "INVALID_REQUEST",
-            message: "Tutor request is invalid.",
-          },
+          error: { code: "INVALID_REQUEST", message: "Tutor request is invalid." },
         });
         return;
       }
       if (error instanceof LLMError) {
-        const status = error.code === "AUTHENTICATION_ERROR"
-          ? 502
-          : error.code === "RATE_LIMITED"
-            ? 503
-            : error.code === "TIMEOUT"
-              ? 504
-              : 502;
+        const status =
+          error.code === "AUTHENTICATION_ERROR" ? 502
+          : error.code === "RATE_LIMITED" ? 503
+          : error.code === "TIMEOUT" ? 504
+          : 502;
         response.status(status).json({
           error: {
             code: error.code,
@@ -228,14 +307,10 @@ export function createServerApp(llmCore: LLMCore, options: ServerAppOptions = {}
         errorType: error instanceof Error ? error.name : "UnknownError",
       }));
       response.status(500).json({
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "Tutor request failed.",
-        },
+        error: { code: "INTERNAL_ERROR", message: "Tutor request failed." },
       });
     }
   });
 
   return app;
 }
-

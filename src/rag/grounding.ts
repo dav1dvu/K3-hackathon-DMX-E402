@@ -44,9 +44,9 @@ export function answerFromDocument(index: DocumentIndex, request: AnswerRequest)
     text: evidenceFromContent(chunk.content),
   }));
   const sourcePages = [...new Set(evidence.map((item) => item.pageNumber))].sort((a, b) => a - b);
-  const answer = evidence
-    .map((item) => `Trang ${item.pageNumber}: ${item.text}`)
-    .join("\n\n");
+  const answer = evidence.length > 1
+    ? evidence.map((item) => `- Trang ${item.pageNumber}: ${item.text}`).join("\n")
+    : evidence.map((item) => `Trang ${item.pageNumber}: ${item.text}`).join("\n");
 
   return { answer, sourcePages, insufficientContext: false };
 }

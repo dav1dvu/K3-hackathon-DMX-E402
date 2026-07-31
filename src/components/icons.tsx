@@ -45,3 +45,57 @@ export function RotateIcon(props: IconProps) {
 export function MenuIcon(props: IconProps) {
   return <svg {...commonProps} {...props}><path d="M4 7h16M4 12h16M4 17h16"/></svg>;
 }
+
+export function PenIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="m17 3 4 4L7 21l-4 1 1-4Z"/></svg>;
+}
+
+export function HighlighterIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="m9 11 4 4-6 6H3v-4Z"/><path d="m14.5 5.5 4 4"/><path d="M17.5 2.5 21.5 6.5 14 14l-4-4Z"/></svg>;
+}
+
+export function ZoomInIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>;
+}
+
+export function ZoomOutIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>;
+}
+
+export function DownloadIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>;
+}
+
+export function TrashIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M9 7V4h6v3"/></svg>;
+}
+
+export function UndoIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="M3 10h10a5 5 0 0 1 0 10H8"/><path d="m3 10 5-5m-5 5 5 5"/></svg>;
+}
+
+export function PlusIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="M12 5v14M5 12h14"/></svg>;
+}
+
+export function CheckIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="m5 13 4 4 10-10"/></svg>;
+}
+
+export function LogoutIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>;
+}
+
+export function BookIcon(props: IconProps) {
+  return <svg {...commonProps} {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>;
+}
+
+export function GraduationCapIcon(props: IconProps) {
+  return (
+    <svg {...commonProps} {...props}>
+      <path d="m2 9 10-5 10 5-10 5Z"/>
+      <path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+      <path d="M22 9v7"/>
+    </svg>
+  );
+}

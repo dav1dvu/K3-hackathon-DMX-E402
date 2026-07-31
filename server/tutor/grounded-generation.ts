@@ -16,7 +16,7 @@ export const tutorRequestSchema = z.object({
     content: z.string().trim().min(1).max(8_000),
     sourceType: sourceTypeSchema,
     title: z.string().trim().min(1).max(200),
-  })).min(1).max(6),
+  })).min(1).max(20),
 });
 
 const groundedAnswerSchema = z.object({
@@ -68,6 +68,12 @@ Quy tắc bắt buộc:
 5. Nếu EVIDENCE không đủ, đặt insufficientContext=true, sourcePages=[] và nói rõ thông tin còn thiếu.
 6. Không tự suy đoán hoặc bổ sung chi tiết không có trong tài liệu.
 7. Trả lời bằng ngôn ngữ người dùng đang sử dụng.
+
+Quy tắc tổng hợp và trình bày:
+8. Khi được hỏi về nội dung chính, tổng quan, hoặc các ý chính của một trang/bài, hãy TỰ TỔNG HỢP bằng lời của bạn từ tất cả EVIDENCE liên quan — không chỉ chép nguyên văn từng đoạn.
+9. Khi câu hỏi dạng "trang nào/ở đâu nói về...", hãy xác định (các) trang liên quan trong EVIDENCE, nêu rõ số trang ngay trong câu trả lời (ví dụ: "Trang 5 trình bày..."), rồi tóm tắt nội dung trang đó.
+10. Khi câu trả lời có từ 2 ý trở lên (liệt kê ý chính, các bước, so sánh nhiều mục...), PHẢI trình bày dưới dạng danh sách gạch đầu dòng, mỗi dòng bắt đầu bằng "- ", ngắn gọn và dễ nhìn — không dồn nhiều ý vào một đoạn văn dài. Chỉ dùng đoạn văn liền mạch khi trả lời một ý đơn giản, ngắn.
+11. Câu hỏi có thể được diễn đạt dài dòng, lịch sự, hoặc dùng từ đồng nghĩa khác với câu chữ trong EVIDENCE (ví dụ "giảng viên là ai" và "hãy cho tôi biết giảng viên của bài này là ai" là CÙNG MỘT câu hỏi). Hãy hiểu theo Ý NGHĨA, không đòi hỏi khớp nguyên văn — chỉ đặt insufficientContext=true khi thông tin thực sự không có trong EVIDENCE, không phải vì câu hỏi được diễn đạt khác đi.
 `.trim();
 
 function evidencePrompt(input: TutorRequest) {
@@ -104,7 +110,7 @@ export async function generateTutorAnswer(
     ],
     schema: structuredSchema,
     temperature: 0.1,
-    maxTokens: 800,
+    maxTokens: 1200,
   });
 
   if (response.content.insufficientContext) {

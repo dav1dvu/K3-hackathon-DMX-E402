@@ -1,4 +1,30 @@
-export type AppScreen = "upload" | "tutor";
+export type AppScreen = "login" | "admin_library" | "student_library" | "tutor";
+
+export type Role = "admin" | "student";
+
+export type AppSession = {
+  role: Role;
+  name: string;
+};
+
+export type MaterialRecord = {
+  id: string;
+  fileName: string;
+  displayName: string;
+  pageCount: number | null;
+  uploadedAt: string;
+};
+
+export type DayRecord = {
+  id: string;
+  title: string;
+  published: boolean;
+  materials: MaterialRecord[];
+};
+
+export type LibraryData = {
+  days: DayRecord[];
+};
 
 export type ChatRole = "user" | "assistant";
 

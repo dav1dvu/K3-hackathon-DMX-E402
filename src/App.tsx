@@ -1,21 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+import { AdminLibraryScreen } from "./components/AdminLibraryScreen";
+import { LoginScreen } from "./components/LoginScreen";
 import { TutorScreen } from "./components/TutorScreen";
-import { UploadScreen } from "./components/UploadScreen";
 import { ingestPdfDocument } from "./rag/ingestion";
+import * as libraryApi from "./services/libraryApi";
 import { askTutor } from "./services/tutorApi";
 import type {
-  AppScreen,
+  AppSession,
   ChatMessage,
+  DayRecord,
   DocumentKnowledge,
   IngestionProgress,
-  PdfSource,
+  MaterialRecord,
   QueryScope,
 } from "./types";
 
-const PROCESSING_DELAY_MS = 1000;
-const SAMPLE_FILE_NAME = "Strategyn JTBD Playbook.pdf";
-const SAMPLE_FILE_URL = "/sample-document.pdf";
+const SESSION_STORAGE_KEY = "vlearn.session";
 
 function createMessageId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -25,11 +26,27 @@ function conversationKey(scope: QueryScope, pageNumber: number) {
   return scope === "whole_lesson" ? "whole_lesson" : `current_page:${pageNumber}`;
 }
 
+function loadStoredSession(): AppSession | null {
+  try {
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AppSession;
+    if (parsed.role !== "admin" && parsed.role !== "student") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
-  const [screen, setScreen] = useState<AppScreen>("upload");
-  const [pdfSource, setPdfSource] = useState<PdfSource | null>(null);
-  const [documentName, setDocumentName] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [session, setSession] = useState<AppSession | null>(() => loadStoredSession());
+
+  const [days, setDays] = useState<DayRecord[]>([]);
+  const [isLibraryLoading, setIsLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState("");
+
+  const [activeDay, setActiveDay] = useState<DayRecord | null>(null);
+  const [activeMaterial, setActiveMaterial] = useState<MaterialRecord | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [scope, setScope] = useState<QueryScope>("current_page");
@@ -39,7 +56,6 @@ export default function App() {
   const [knowledge, setKnowledge] = useState<DocumentKnowledge | null>(null);
   const [ingestionProgress, setIngestionProgress] = useState<IngestionProgress | null>(null);
   const [ingestionError, setIngestionError] = useState("");
-  const timeoutsRef = useRef<number[]>([]);
   const ingestionRunRef = useRef(0);
   const chatRunRef = useRef(0);
 
@@ -51,26 +67,44 @@ export default function App() {
     [currentPage, messages, scope],
   );
 
-  useEffect(
-    () => () => {
-      timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-      ingestionRunRef.current += 1;
-    },
-    [],
-  );
+  const refreshLibrary = useCallback(async () => {
+    setIsLibraryLoading(true);
+    setLibraryError("");
+    try {
+      setDays(await libraryApi.fetchLibrary());
+    } catch {
+      setLibraryError("Không thể tải danh sách học liệu.");
+    } finally {
+      setIsLibraryLoading(false);
+    }
+  }, []);
 
-  const startDocument = (name: string, source: PdfSource) => {
-    setPdfSource(source);
-    setDocumentName(name);
+  useEffect(() => {
+    if (session) void refreshLibrary();
+  }, [session, refreshLibrary]);
+
+  const login = (nextSession: AppSession) => {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
+    setSession(nextSession);
+  };
+
+  const logout = () => {
+    ingestionRunRef.current += 1;
+    chatRunRef.current += 1;
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    setSession(null);
+    setDays([]);
+    setActiveDay(null);
+    setActiveMaterial(null);
+    setCurrentPage(1);
+    setTotalPages(0);
+    setScope("current_page");
+    setMessages([]);
+    setQuestion("");
+    setTypingKeys([]);
     setKnowledge(null);
-    setIngestionError("");
     setIngestionProgress(null);
-    setIsProcessing(true);
-    const timeoutId = window.setTimeout(() => {
-      setIsProcessing(false);
-      setScreen("tutor");
-    }, PROCESSING_DELAY_MS);
-    timeoutsRef.current.push(timeoutId);
+    setIngestionError("");
   };
 
   const handleDocumentLoad = useCallback(async (pdf: PDFDocumentProxy) => {
@@ -79,7 +113,7 @@ export default function App() {
     setCurrentPage((page) => Math.min(page, pdf.numPages));
     setIngestionError("");
     try {
-      const nextKnowledge = await ingestPdfDocument(pdf, documentName, {
+      const nextKnowledge = await ingestPdfDocument(pdf, activeMaterial?.displayName ?? "", {
         onProgress: (progress) => {
           if (ingestionRunRef.current === runId) setIngestionProgress(progress);
         },
@@ -91,7 +125,7 @@ export default function App() {
         setIngestionError("Không thể phân tích đầy đủ tài liệu. Hãy thử lại với file PDF khác.");
       }
     }
-  }, [documentName]);
+  }, [activeMaterial]);
 
   const selectPage = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -101,6 +135,28 @@ export default function App() {
   const handleScopeChange = (nextScope: QueryScope) => {
     setScope(nextScope);
     setQuestion("");
+  };
+
+  const handleSelectMaterial = (day: DayRecord, material: MaterialRecord) => {
+    ingestionRunRef.current += 1;
+    chatRunRef.current += 1;
+    setActiveDay(day);
+    setActiveMaterial(material);
+    setCurrentPage(1);
+    setTotalPages(0);
+    setScope("current_page");
+    setMessages([]);
+    setQuestion("");
+    setTypingKeys([]);
+    setKnowledge(null);
+    setIngestionProgress(null);
+    setIngestionError("");
+  };
+
+  const handleAskAboutSelection = (selectedText: string) => {
+    const quoted = selectedText.length > 300 ? `${selectedText.slice(0, 300)}…` : selectedText;
+    setScope("current_page");
+    setQuestion(`Giải thích đoạn này giúp mình: "${quoted}"`);
   };
 
   const handleSendQuestion = (submittedQuestion: string) => {
@@ -156,58 +212,63 @@ export default function App() {
     });
   };
 
-  const resetApplication = () => {
-    timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-    timeoutsRef.current = [];
-    ingestionRunRef.current += 1;
-    chatRunRef.current += 1;
-    setScreen("upload");
-    setPdfSource(null);
-    setDocumentName("");
-    setIsProcessing(false);
-    setCurrentPage(1);
-    setTotalPages(0);
-    setScope("current_page");
-    setMessages([]);
-    setQuestion("");
-    setTypingKeys([]);
-    setKnowledge(null);
-    setIngestionProgress(null);
-    setIngestionError("");
-  };
+  if (!session) {
+    return <LoginScreen onLogin={login} />;
+  }
 
-  if (screen === "upload") {
+  if (session.role === "admin") {
     return (
-      <UploadScreen
-        isProcessing={isProcessing}
-        processingFileName={documentName}
-        onFileSelected={(selectedFile) => startDocument(selectedFile.name, selectedFile)}
-        onUseSample={() => startDocument(SAMPLE_FILE_NAME, SAMPLE_FILE_URL)}
+      <AdminLibraryScreen
+        displayName={session.name}
+        days={days}
+        isLoading={isLibraryLoading}
+        error={libraryError}
+        onCreateDay={async (title) => { await libraryApi.createDay(title); await refreshLibrary(); }}
+        onTogglePublish={async (day) => { await libraryApi.setDayPublished(day.id, !day.published); await refreshLibrary(); }}
+        onDeleteDay={async (day) => { await libraryApi.deleteDay(day.id); await refreshLibrary(); }}
+        onUploadMaterial={async (day, file, displayName) => {
+          await libraryApi.uploadMaterial(day.id, file, displayName);
+          await refreshLibrary();
+        }}
+        onDeleteMaterial={async (day, material) => {
+          await libraryApi.deleteMaterial(day.id, material.id);
+          await refreshLibrary();
+        }}
+        onLogout={logout}
       />
     );
   }
 
+  const publishedDays = days.filter((day) => day.published);
+
   return (
     <TutorScreen
-      fileName={documentName}
-      pdfSource={pdfSource}
+      studentName={session.name}
+      days={publishedDays}
+      isLibraryLoading={isLibraryLoading}
+      libraryError={libraryError}
+      activeDay={activeDay}
+      activeMaterial={activeMaterial}
+      pdfSource={activeMaterial ? libraryApi.materialFileUrl(activeMaterial.id) : null}
       currentPage={currentPage}
       totalPages={totalPages}
       messages={activeMessages}
+      allMessages={messages}
       question={question}
       scope={scope}
       isBotTyping={typingKeys.includes(activeConversationKey)}
       knowledge={knowledge}
       ingestionProgress={ingestionProgress}
       ingestionError={ingestionError}
+      onSelectMaterial={handleSelectMaterial}
       onDocumentLoad={handleDocumentLoad}
-      onSelectPage={selectPage}
       onPrevious={() => selectPage(Math.max(1, currentPage - 1))}
       onNext={() => selectPage(Math.min(totalPages, currentPage + 1))}
       onScopeChange={handleScopeChange}
       onQuestionChange={setQuestion}
       onSendQuestion={handleSendQuestion}
-      onReset={resetApplication}
+      onAskAboutSelection={handleAskAboutSelection}
+      onLogout={logout}
     />
   );
 }

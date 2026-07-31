@@ -2,7 +2,7 @@ import { useEffect, useRef, type FormEvent } from "react";
 import type { ChatMessage as ChatMessageType } from "../types";
 import type { QueryScope } from "../types";
 import { ChatMessage } from "./ChatMessage";
-import { SendIcon, SparkleIcon } from "./icons";
+import { GraduationCapIcon, SendIcon } from "./icons";
 
 const suggestions = [
   "Tóm tắt trang này.",
@@ -52,9 +52,9 @@ export function ChatPanel({
     <aside className="chat-panel" aria-labelledby="chat-title">
       <div className="chat-header">
         <div className="chat-title-row">
-          <span className="chat-logo"><SparkleIcon /></span>
+          <span className="chat-logo"><GraduationCapIcon /></span>
           <div>
-            <h2 id="chat-title">Hỏi đáp có nguồn</h2>
+            <h2 id="chat-title">Trợ lý học tập</h2>
             <p><span className="status-dot" />{scope === "current_page" ? `Ngữ cảnh: trang ${pageNumber}` : "Ngữ cảnh: toàn bộ bài"}</p>
           </div>
         </div>
@@ -67,13 +67,13 @@ export function ChatPanel({
       <div className="chat-body" aria-live="polite">
         {!isKnowledgeReady ? (
           <div className="chat-empty">
-            <span className="empty-sparkle"><SparkleIcon width={25} height={25} /></span>
+            <span className="empty-sparkle"><GraduationCapIcon width={25} height={25} /></span>
             <h3>{ingestionFailed ? "Chưa thể phân tích tài liệu" : "Đang đọc toàn bộ PDF"}</h3>
             <p>{ingestionFailed ? "Hãy tải file khác để thử lại." : "Chat sẽ mở khi extraction, OCR fallback và indexing hoàn tất."}</p>
           </div>
         ) : messages.length === 0 ? (
           <div className="chat-empty">
-            <span className="empty-sparkle"><SparkleIcon width={25} height={25} /></span>
+            <span className="empty-sparkle"><GraduationCapIcon width={25} height={25} /></span>
             <h3>Bạn muốn hiểu rõ điều gì?</h3>
             <p>{scope === "current_page" ? `Câu trả lời chỉ dùng bằng chứng từ trang ${pageNumber}.` : "Câu trả lời sẽ truy xuất bằng chứng trên toàn bộ bài học."}</p>
             <div className="suggestion-list">
@@ -97,7 +97,7 @@ export function ChatPanel({
 
         {isBotTyping && (
           <div className="typing-indicator" role="status">
-            <span className="message-avatar"><SparkleIcon width={15} height={15} /></span>
+            <span className="message-avatar"><GraduationCapIcon width={15} height={15} /></span>
             <div><span /><span /><span /></div>
             <p>Trợ lý đang trả lời...</p>
           </div>

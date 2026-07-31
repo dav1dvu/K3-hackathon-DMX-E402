@@ -5,7 +5,7 @@ import type {
   QueryScope,
 } from "../types";
 import { answerFromDocument } from "../rag/grounding";
-import { searchDocument } from "../rag/indexing";
+import { resolveEffectiveScope, sampleAcrossPages, searchDocument } from "../rag/indexing";
 
 type AskTutorRequest = {
   index: DocumentIndex;
@@ -33,15 +33,25 @@ export class TutorApiError extends Error {
 }
 
 export async function askTutor(request: AskTutorRequest): Promise<GroundedAnswer> {
+  const effectiveScope = resolveEffectiveScope(request.question, request.scope);
   const evidence = searchDocument(request.index, {
     question: request.question,
-    scope: request.scope,
+    scope: effectiveScope,
     currentPage: request.currentPage,
-    limit: 4,
+    limit: effectiveScope === "whole_lesson" ? 12 : 4,
   });
 
-  if (evidence.length === 0) {
-    return answerFromDocument(request.index, request);
+  // Keyword scoring can legitimately find zero overlap for a whole-lesson question that's
+  // phrased as a paraphrase or in a different language than the source text. Rather than
+  // the client declaring "insufficient" on the spot, give the LLM (which does understand
+  // meaning across phrasing/language) a representative sample of the whole document to
+  // judge for itself. Current-page scope and a genuinely empty document still bail locally.
+  const finalEvidence = evidence.length === 0 && effectiveScope === "whole_lesson"
+    ? sampleAcrossPages(request.index, 12)
+    : evidence;
+
+  if (finalEvidence.length === 0) {
+    return answerFromDocument(request.index, { ...request, scope: effectiveScope });
   }
 
   const response = await fetch("/api/tutor/chat", {
@@ -49,13 +59,13 @@ export async function askTutor(request: AskTutorRequest): Promise<GroundedAnswer
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       question: request.question,
-      scope: request.scope,
+      scope: effectiveScope,
       currentPage: request.currentPage,
       history: request.history.slice(-20).map((message) => ({
         role: message.role,
         content: message.content,
       })),
-      evidence: evidence.map(({ chunk }) => ({
+      evidence: finalEvidence.map(({ chunk }) => ({
         pageNumber: chunk.pageNumber,
         content: chunk.content,
         sourceType: chunk.sourceType,

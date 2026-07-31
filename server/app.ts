@@ -2,12 +2,14 @@ import express from "express";
 import { ZodError } from "zod";
 import type { LLMCore } from "./llm/index.js";
 import { LLMError } from "./llm/index.js";
+import { createMaterialsRouter } from "./materials/routes.js";
 import { generateTutorAnswer, tutorRequestSchema } from "./tutor/grounded-generation.js";
 
 export function createServerApp(llmCore: LLMCore) {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "1mb" }));
+  app.use("/api/library", createMaterialsRouter());
 
   app.get("/api/health", (_request, response) => {
     response.json({ ok: true });

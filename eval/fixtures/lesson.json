@@ -1,0 +1,65 @@
+{
+  "note": "Tài liệu tổng hợp DÙNG CHO EVAL — nội dung tự soạn (khái niệm AI/ML phổ thông, không sao chép từ transcript thật trong data/vlearn-pack), để tránh vi phạm quy định không commit nguyên văn dữ liệu được cấp. Câu hỏi test (eval_cases.json) mới là phần lấy/phát triển từ chatlog thật.",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "sourceType": "pdf_text",
+      "title": "Prompt Engineering & Agentic AI",
+      "content": "Prompt Engineering & Agentic AI. Instructor: Minh Tran (Blue Team). Course agenda: hệ sinh thái AI, prompt engineering, tool calling, RAG, agent, memory, đánh giá chất lượng."
+    },
+    {
+      "pageNumber": 2,
+      "sourceType": "pdf_text",
+      "title": "Hệ sinh thái AI",
+      "content": "Hệ sinh thái AI có quan hệ phân cấp từ rộng đến hẹp: Artificial Intelligence (AI) bao trùm mọi hệ thống mô phỏng hành vi thông minh. Machine Learning (ML) là tập con của AI, học từ dữ liệu thay vì lập trình luật cứng. Deep Learning (DL) là tập con của ML dùng mạng neural nhiều lớp. Generative AI (GenAI) là tập con của DL tạo ra nội dung mới. Large Language Model (LLM) là một dạng GenAI chuyên về văn bản."
+    },
+    {
+      "pageNumber": 3,
+      "sourceType": "pdf_text",
+      "title": "Prompt Engineering cơ bản",
+      "content": "Prompt engineering là kỹ thuật thiết kế câu lệnh đầu vào để LLM trả về kết quả mong muốn. Ba kỹ thuật phổ biến: zero-shot (không ví dụ), few-shot (kèm vài ví dụ mẫu), chain-of-thought (yêu cầu model trình bày từng bước suy luận trước khi kết luận)."
+    },
+    {
+      "pageNumber": 4,
+      "sourceType": "pdf_text",
+      "title": "Tool calling",
+      "content": "Tool calling trong prompt engineering là kỹ thuật cho phép mô hình ngôn ngữ lớn tương tác với công cụ bên ngoài, ví dụ truy vấn cơ sở dữ liệu, gọi API thời tiết, hoặc thực thi hàm tính toán, để làm những việc bản thân mô hình không tự làm được. Model phân tích yêu cầu người dùng, chọn công cụ phù hợp, rồi trả về cấu trúc lệnh gọi thay vì chỉ trả văn bản."
+    },
+    {
+      "pageNumber": 5,
+      "sourceType": "pdf_text",
+      "title": "Retrieval-Augmented Generation (RAG)",
+      "content": "RAG là kỹ thuật kết hợp truy xuất tài liệu với sinh văn bản: hệ thống tìm các đoạn văn bản liên quan trong kho tri thức trước, rồi đưa các đoạn đó làm bằng chứng cho LLM khi trả lời, giúp câu trả lời bám sát tài liệu nguồn thay vì chỉ dựa vào kiến thức đã huấn luyện sẵn."
+    },
+    {
+      "pageNumber": 6,
+      "sourceType": "pdf_text",
+      "title": "Agent & ReAct",
+      "content": "Agent là hệ thống dùng LLM để tự lên kế hoạch và thực hiện nhiều bước nhằm đạt mục tiêu, thay vì chỉ trả lời một câu hỏi. Mẫu hình ReAct (Reasoning + Acting) xen kẽ bước suy luận và bước hành động: model suy nghĩ, chọn hành động, quan sát kết quả, rồi suy nghĩ tiếp cho đến khi hoàn thành nhiệm vụ."
+    },
+    {
+      "pageNumber": 7,
+      "sourceType": "pdf_text",
+      "title": "Memory injection",
+      "content": "Memory injection là kỹ thuật quản lý ngữ cảnh cho agent nhiều lượt: chỉ đưa vào các fact thật sự cần cho tác vụ hiện tại, ưu tiên lịch sử gần đây hoặc lịch sử liên quan thay vì dồn toàn bộ transcript vào prompt. Kỹ thuật này phù hợp cho trợ lý hỗ trợ, coding assistant, và tutor nhiều lượt hội thoại."
+    },
+    {
+      "pageNumber": 8,
+      "sourceType": "pdf_text",
+      "title": "Đánh giá chất lượng hệ thống AI",
+      "content": "Đánh giá chất lượng hệ thống AI cần một golden set — tập câu hỏi mẫu có đáp án đúng đã biết trước — để đo tự động mỗi khi thay đổi. Hai lỗi cần theo dõi chặt: trả lời không có căn cứ (bịa thông tin) và trích dẫn sai nguồn. Quality bar nên đặt bằng phần trăm cụ thể trước khi đo, không đổi bar sau khi thấy kết quả thấp."
+    },
+    {
+      "pageNumber": 9,
+      "sourceType": "pdf_text",
+      "title": "Multimodal RAG",
+      "content": "Multimodal RAG mở rộng RAG để xử lý cả hình ảnh, sơ đồ và bảng biểu, không chỉ văn bản thuần. Hệ thống cần một bước trích xuất mô tả nội dung hình ảnh trước khi đưa vào kho tri thức, để câu hỏi về sơ đồ trong tài liệu cũng có bằng chứng để trả lời."
+    },
+    {
+      "pageNumber": 10,
+      "sourceType": "pdf_text",
+      "title": "Bài tập & logistics",
+      "content": "Bài tập buổi này: xây một prototype trợ lý hỏi-đáp có trích dẫn nguồn trên tài liệu PDF thật. Nộp bài trước 23:59, kèm bộ golden set tối thiểu 20 case. Câu hỏi ngoài phạm vi buổi học (ví dụ yêu cầu chấm điểm chính thức hoặc gọi API bên ngoài) không thuộc phạm vi hỗ trợ của trợ lý."
+    }
+  ]
+}

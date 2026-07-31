@@ -1,0 +1,207 @@
+{
+  "note": "20 case CP3, chạy trên tài liệu tự soạn eval/fixtures/lesson.json qua đúng pipeline sản phẩm: resolveEffectiveScope + searchDocument (src/rag) -> generateTutorAnswer (server/tutor/grounded-generation.ts) gọi LLM thật qua LLMCore. ≥10 case lấy/phát triển từ chatlog thật (data/vlearn-pack/chatlog) — trích message_id làm nguồn, không copy nguyên văn nội dung bài giảng thật.",
+  "cases": [
+    {
+      "id": "CP3-001",
+      "layer": "1",
+      "difficulty": "thuong",
+      "question": "Tài liệu có đề cập đến quantum entanglement không?",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "tự thiết kế — đối chứng golden case 'missing-answer' đã có trong src/rag/rag.test.ts",
+      "expected": { "insufficientContext": true }
+    },
+    {
+      "id": "CP3-002",
+      "layer": "1",
+      "difficulty": "hiem",
+      "question": "Trang 5 nói gì về transformer attention?",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "tự thiết kế — trang 5 thực chất nói về RAG, không nói về transformer attention; kiểm tra model không suy đoán/gán ghép nội dung sai trang",
+      "expected": { "insufficientContext": true }
+    },
+    {
+      "id": "CP3-003",
+      "layer": "1",
+      "difficulty": "hiem",
+      "question": "Trang 1 tác giả của tài liệu là ai?",
+      "scope": "current_page",
+      "currentPage": 1,
+      "sourceNote": "tự thiết kế — trang 1 chỉ nêu Instructor, không có mục 'tác giả' riêng; kiểm tra model không tự suy Instructor = tác giả",
+      "expected": { "insufficientContext": true }
+    },
+    {
+      "id": "CP3-004",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "tóm tắt hết slice trong vài câu đi",
+      "scope": "current_page",
+      "currentPage": 1,
+      "sourceNote": "chatlog thật — message M0122 (turn T0122), nguyên văn",
+      "expected": { "insufficientContext": false, "minDistinctPages": 3 }
+    },
+    {
+      "id": "CP3-005",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "TÓm tắt tài liệu tôi xem nào",
+      "scope": "current_page",
+      "currentPage": 1,
+      "sourceNote": "chatlog thật — message M1807 (turn T0690), nguyên văn kể cả lỗi viết hoa",
+      "expected": { "insufficientContext": false, "minDistinctPages": 3 }
+    },
+    {
+      "id": "CP3-006",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "nội dung chính của bài là gì",
+      "scope": "current_page",
+      "currentPage": 1,
+      "sourceNote": "phát triển từ chatlog thật — đúng pattern gây bug retrieval đã tìm & sửa trong phiên làm việc trước (bộ lọc từ đệm xoá nhầm cụm 'nội dung')",
+      "expected": { "insufficientContext": false, "minDistinctPages": 3 }
+    },
+    {
+      "id": "CP3-007",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "Cho tôi biết main content của bài này",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "phát triển từ chatlog thật — câu hỏi pha tiếng Anh/Việt, kiểm tra retrieval xuyên ngôn ngữ",
+      "expected": { "insufficientContext": false, "minDistinctPages": 3 }
+    },
+    {
+      "id": "CP3-008",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "giảng viên của bài thuyết trình này là ai",
+      "scope": "whole_lesson",
+      "currentPage": 3,
+      "sourceNote": "phát triển từ chatlog thật + golden case đã có trong src/rag/rag.test.ts (giảng viên ~ Instructor)",
+      "expected": { "insufficientContext": false, "mustIncludePages": [1] }
+    },
+    {
+      "id": "CP3-009",
+      "layer": "3",
+      "difficulty": "thuong",
+      "question": "Bạn chấm điểm bài quiz của tôi được không?",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "tự thiết kế — yêu cầu hành động ngoài khả năng/thẩm quyền của trợ lý hỏi-đáp tài liệu",
+      "expected": { "insufficientContext": true }
+    },
+    {
+      "id": "CP3-010",
+      "layer": "3",
+      "difficulty": "thuong",
+      "question": "Gọi giúp tôi API thời tiết hôm nay",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "tự thiết kế — yêu cầu công cụ/hành động ngoài phạm vi tài liệu",
+      "expected": { "insufficientContext": true }
+    },
+    {
+      "id": "CP3-011",
+      "layer": "4",
+      "difficulty": "thuong",
+      "question": "So sánh trang 3 và trang 6",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "phát triển từ chatlog thật — pattern so sánh nhiều trang, đối chứng golden case 'compare-pages' đã có",
+      "expected": { "insufficientContext": false, "mustIncludePages": [3, 6], "mustOnlyBeAmongPages": [3, 6] }
+    },
+    {
+      "id": "CP3-012",
+      "layer": "4",
+      "difficulty": "thuong",
+      "question": "Trang nào nói về tool calling?",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "phát triển từ chatlog thật — 'tool calling' là chủ đề thật xuất hiện trong câu trả lời tutor tại turn T1201",
+      "expected": { "insufficientContext": false, "mustIncludePages": [4] }
+    },
+    {
+      "id": "CP3-013",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Tool calling là gì?",
+      "scope": "current_page",
+      "currentPage": 4,
+      "sourceNote": "phát triển từ chatlog thật — cùng chủ đề T1201",
+      "expected": { "insufficientContext": false, "mustIncludePages": [4] }
+    },
+    {
+      "id": "CP3-014",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "RAG hoạt động như thế nào?",
+      "scope": "current_page",
+      "currentPage": 5,
+      "sourceNote": "tự thiết kế — câu hỏi khái niệm thường gặp",
+      "expected": { "insufficientContext": false, "mustIncludePages": [5] }
+    },
+    {
+      "id": "CP3-015",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "ReAct là gì?",
+      "scope": "current_page",
+      "currentPage": 6,
+      "sourceNote": "phát triển từ chatlog thật — 'Agent, ReAct' là chủ đề thật được nhắc trong tong-hop-feedback-ai-tutor.md §5.3",
+      "expected": { "insufficientContext": false, "mustIncludePages": [6] }
+    },
+    {
+      "id": "CP3-016",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Memory injection dùng để làm gì?",
+      "scope": "current_page",
+      "currentPage": 7,
+      "sourceNote": "chatlog/feedback thật — chủ đề 'Memory injection' nêu trong tong-hop-feedback-ai-tutor.md §5.3",
+      "expected": { "insufficientContext": false, "mustIncludePages": [7] }
+    },
+    {
+      "id": "CP3-017",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "AI, ML, DL, GenAI, LLM khác nhau thế nào?",
+      "scope": "current_page",
+      "currentPage": 2,
+      "sourceNote": "phát triển từ chatlog thật — cùng cấu trúc phân cấp AI>ML>DL>GenAI>LLM được tutor thật trả lời tại turn T0699",
+      "expected": { "insufficientContext": false, "mustIncludePages": [2] }
+    },
+    {
+      "id": "CP3-018",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Golden set dùng để làm gì?",
+      "scope": "current_page",
+      "currentPage": 8,
+      "sourceNote": "tự thiết kế",
+      "expected": { "insufficientContext": false, "mustIncludePages": [8] }
+    },
+    {
+      "id": "CP3-019",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Trang 3 nói về gì vậy?",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "đối chứng golden case paraphrase đã có trong src/rag/rag.test.ts",
+      "expected": { "insufficientContext": false, "mustIncludePages": [3] }
+    },
+    {
+      "id": "CP3-020",
+      "layer": "hiem",
+      "difficulty": "hiem",
+      "question": "hãy cho tôi biết bài tập buổi này có gì, và mình có được dùng ChatGPT ngoài để làm không",
+      "scope": "whole_lesson",
+      "currentPage": 1,
+      "sourceNote": "tự thiết kế — câu hỏi 2 ý ghép: 1 ý có bằng chứng (bài tập, trang 10), 1 ý không có bằng chứng (chính sách dùng ChatGPT ngoài). Case khó, cần soát tay.",
+      "expected": { "insufficientContext": "either", "mustOnlyBeAmongPages": [10] },
+      "manualReview": true,
+      "manualReviewNote": "Đạt nếu: (a) insufficientContext=true toàn bộ, HOẶC (b) trả lời phần bài tập từ trang 10 và KHÔNG khẳng định chính sách dùng ChatGPT ngoài (tài liệu không có thông tin này). Không đạt nếu bịa ra câu trả lời có/không cho phần ChatGPT."
+    }
+  ]
+}

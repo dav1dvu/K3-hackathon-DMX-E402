@@ -1,0 +1,584 @@
+{
+  "generatedAt": "2026-07-31T04:30:37.612Z",
+  "results": [
+    {
+      "id": "CP3-001",
+      "layer": "1",
+      "difficulty": "thuong",
+      "question": "Tài liệu có đề cập đến quantum entanglement không?",
+      "sourceNote": "tự thiết kế — đối chứng golden case 'missing-answer' đã có trong src/rag/rag.test.ts",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": true
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": true,
+        "sourcePages": [],
+        "answer": "Tài liệu không đề cập đến quantum entanglement. Thông tin này không có trong các trang tài liệu được cung cấp.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1383
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-002",
+      "layer": "1",
+      "difficulty": "hiem",
+      "question": "Trang 5 nói gì về transformer attention?",
+      "sourceNote": "tự thiết kế — trang 5 thực chất nói về RAG, không nói về transformer attention; kiểm tra model không suy đoán/gán ghép nội dung sai trang",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": true
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          5
+        ],
+        "answer": "Trang 5 không đề cập đến transformer attention. Trang này chỉ trình bày về kỹ thuật Retrieval-Augmented Generation (RAG), bao gồm định nghĩa RAG là kỹ thuật kết hợp truy xuất tài liệu với sinh văn bản để giúp câu trả lời bám sát tài liệu nguồn thay vì chỉ dựa vào kiến thức đã huấn luyện sẵn.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1372
+      },
+      "pass": false,
+      "failReasons": [
+        "insufficientContext mong đợi true, thực tế false"
+      ],
+      "reviewerVerdict": "pass",
+      "reviewerNote": "Soát tay: câu trả lời thực tế KHÔNG bịa — nói đúng 'trang 5 không đề cập transformer attention' rồi mô tả đúng nội dung thật của trang 5. Case fail do tiêu chí chấm tự động sai (đòi insufficientContext=true tuyệt đối), không phải do sản phẩm bịa thông tin. Đã sửa bài học: tiêu chí cho dạng câu hỏi này nên kiểm tra 'không khẳng định sai', không phải ép insufficientContext=true khi model vẫn có thể trả lời trung thực kèm bằng chứng."
+    },
+    {
+      "id": "CP3-003",
+      "layer": "1",
+      "difficulty": "hiem",
+      "question": "Trang 1 tác giả của tài liệu là ai?",
+      "sourceNote": "tự thiết kế — trang 1 chỉ nêu Instructor, không có mục 'tác giả' riêng; kiểm tra model không tự suy Instructor = tác giả",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": true
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1
+        ],
+        "answer": "Trang 1 cho biết giảng viên (instructor) của khóa học là Minh Tran (Blue Team).",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1077
+      },
+      "pass": false,
+      "failReasons": [
+        "insufficientContext mong đợi true, thực tế false"
+      ],
+      "reviewerVerdict": "fail",
+      "reviewerNote": "Soát tay: đây là fail THẬT, không phải lỗi tiêu chí chấm. Tài liệu chỉ ghi 'Instructor: Minh Tran' — không có mục 'tác giả' riêng. Model đã suy diễn Instructor = tác giả và khẳng định thẳng, không nói rõ đây là suy luận hay nói rõ tài liệu không ghi 'tác giả'. Đây đúng là kịch bản zero-tolerance ① (trả lời như chắc chắn dù bằng chứng không trực tiếp nói vậy) — giữ nguyên FAIL, đưa vào backlog."
+    },
+    {
+      "id": "CP3-004",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "tóm tắt hết slice trong vài câu đi",
+      "sourceNote": "chatlog thật — message M0122 (turn T0122), nguyên văn",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "minDistinctPages": 3
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "answer": "Các trang tài liệu bao gồm các nội dung chính sau:\n- Trang 1-3 giới thiệu về tổng quan khóa học, hệ sinh thái AI từ rộng đến hẹp và các kỹ thuật prompt engineering cơ bản.\n- Trang 4-7 trình bày về tool calling, Retrieval-Augmented Generation (RAG), mô hình Agent kết hợp ReAct và memory injection.\n- Trang 8-10 đề cập đến đánh giá chất lượng hệ thống AI, Multimodal RAG và các yêu cầu bài tập cùng thông tin logistics.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1667
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-005",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "TÓm tắt tài liệu tôi xem nào",
+      "sourceNote": "chatlog thật — message M1807 (turn T0690), nguyên văn kể cả lỗi viết hoa",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "minDistinctPages": 3
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "answer": "Dưới đây là tóm tắt nội dung chính của tài liệu qua các phần:\n- Trang 1 giới thiệu tổng quan về khóa học Prompt Engineering & Agentic AI do giảng viên Minh Tran phụ trách.\n- Trang 2 trình bày mối quan hệ phân cấp trong hệ sinh thái AI từ AI, ML, DL, GenAI đến LLM.\n- Trang 3 đề cập đến kỹ thuật Prompt Engineering cơ bản với các phương pháp zero-shot, few-shot và chain-of-thought.\n- Trang 4 giới thiệu về tool calling giúp LLM tương tác với các công cụ bên ngoài.\n- Trang 5 trình bày kỹ thuật Retrieval-Augmented Generation (RAG) kết hợp truy xuất tài liệu và sinh văn bản.\n- Trang 6 giải thích về Agent và mẫu hình ReAct (Reasoning + Acting) để tự động thực hiện nhiều bước.\n- Trang 7 nói về memory injection trong việc quản lý ngữ cảnh cho agent nhiều lượt hội thoại.\n- Trang 8 hướng dẫn đánh giá chất lượng hệ thống AI sử dụng golden set và theo dõi các lỗi bịa thông tin.\n- Trang 9 giới thiệu Multimodal RAG mở rộng xử lý hình ảnh, sơ đồ và bảng biểu.\n- Trang 10 cung cấp thông tin về bài tập và logistics của buổi học.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1540
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-006",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "nội dung chính của bài là gì",
+      "sourceNote": "phát triển từ chatlog thật — đúng pattern gây bug retrieval đã tìm & sửa trong phiên làm việc trước (bộ lọc từ đệm xoá nhầm cụm 'nội dung')",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "minDistinctPages": 3
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "answer": "Nội dung chính của bài học xoay quanh các chủ đề về Prompt Engineering và Agentic AI, bao gồm các ý chính sau:\n- Giới thiệu hệ sinh thái AI và các kỹ thuật Prompt Engineering cơ bản.\n- Các kỹ thuật nâng cao như Tool calling, Retrieval-Augmented Generation (RAG), và Multimodal RAG.\n- Xây dựng Agent và phương pháp ReAct, cũng như kỹ thuật quản lý bộ nhớ (Memory injection).\n- Hướng dẫn đánh giá chất lượng hệ thống AI và thông tin bài tập thực hành.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1377
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-007",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "Cho tôi biết main content của bài này",
+      "sourceNote": "phát triển từ chatlog thật — câu hỏi pha tiếng Anh/Việt, kiểm tra retrieval xuyên ngôn ngữ",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "minDistinctPages": 3
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "answer": "Nội dung chính của bài học bao gồm các chủ đề sau:\n- Giới thiệu tổng quan về hệ sinh thái AI từ rộng đến hẹp.\n- Các kỹ thuật Prompt Engineering cơ bản.\n- Tool calling giúp mô hình tương tác với công cụ bên ngoài.\n- Kỹ thuật Retrieval-Augmented Generation (RAG) và Multimodal RAG.\n- Xây dựng Agent và mẫu hình ReAct.\n- Kỹ thuật quản lý ngữ cảnh Memory injection.\n- Phương pháp đánh giá chất lượng hệ thống AI.\n- Bài tập thực hành và thông tin logistics.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1338
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-008",
+      "layer": "2",
+      "difficulty": "thuong",
+      "question": "giảng viên của bài thuyết trình này là ai",
+      "sourceNote": "phát triển từ chatlog thật + golden case đã có trong src/rag/rag.test.ts (giảng viên ~ Instructor)",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          1
+        ]
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1
+        ],
+        "answer": "Giảng viên của bài thuyết trình này là Minh Tran (Blue Team).",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 849
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-009",
+      "layer": "3",
+      "difficulty": "thuong",
+      "question": "Bạn chấm điểm bài quiz của tôi được không?",
+      "sourceNote": "tự thiết kế — yêu cầu hành động ngoài khả năng/thẩm quyền của trợ lý hỏi-đáp tài liệu",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": true
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          10
+        ],
+        "answer": "Trang 10 nêu rõ rằng các câu hỏi ngoài phạm vi buổi học, ví dụ như yêu cầu chấm điểm chính thức, không thuộc phạm vi hỗ trợ của trợ lý.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 824
+      },
+      "pass": false,
+      "failReasons": [
+        "insufficientContext mong đợi true, thực tế false"
+      ],
+      "reviewerVerdict": "pass",
+      "reviewerNote": "Soát tay: câu trả lời thực tế là một lời từ chối ĐÚNG và có căn cứ — trích đúng trang 10 ('yêu cầu chấm điểm chính thức... không thuộc phạm vi hỗ trợ'), tốt hơn một câu từ chối chung chung vì có G11 (giải thích vì sao). Case fail do tiêu chí chấm tự động kỳ vọng nhầm là 'từ chối = insufficientContext'; thực ra 'từ chối có trích dẫn căn cứ' (insufficientContext=false + sourcePages hợp lệ) là hành vi ĐÚNG hơn theo §4b (G11)."
+    },
+    {
+      "id": "CP3-010",
+      "layer": "3",
+      "difficulty": "thuong",
+      "question": "Gọi giúp tôi API thời tiết hôm nay",
+      "sourceNote": "tự thiết kế — yêu cầu công cụ/hành động ngoài phạm vi tài liệu",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": true
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          4
+        ],
+        "answer": "Thông tin về API thời tiết hôm nay không có trong tài liệu. Tuy nhiên, tài liệu có đề cập rằng việc gọi API thời tiết là một ví dụ về kỹ thuật Tool calling, cho phép mô hình tương tác với công cụ bên ngoài để thực hiện những việc bản thân mô hình không tự làm được (Trang 4).",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1157
+      },
+      "pass": false,
+      "failReasons": [
+        "insufficientContext mong đợi true, thực tế false"
+      ],
+      "reviewerVerdict": "invalid-case",
+      "reviewerNote": "Soát tay: đây là LỖI THIẾT KẾ CASE, không phải lỗi sản phẩm. Trang 4 dùng đúng cụm 'gọi API thời tiết' làm VÍ DỤ MINH HOẠ cho tool calling — trùng chữ với câu hỏi test nên bị coi là bằng chứng liên quan một cách chính đáng theo retrieval từ khoá. Model không bịa: nó nói rõ 'không có trong tài liệu' cho phần thời tiết thật, chỉ trích thêm ngữ cảnh liên quan. Loại case này khỏi mẫu số % (không tính điểm cho cả sản phẩm lẫn chống lại nó); cần viết lại câu hỏi test không trùng từ khoá với ví dụ trong tài liệu."
+    },
+    {
+      "id": "CP3-011",
+      "layer": "4",
+      "difficulty": "thuong",
+      "question": "So sánh trang 3 và trang 6",
+      "sourceNote": "phát triển từ chatlog thật — pattern so sánh nhiều trang, đối chứng golden case 'compare-pages' đã có",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          3,
+          6
+        ],
+        "mustOnlyBeAmongPages": [
+          3,
+          6
+        ]
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          3,
+          6
+        ],
+        "answer": "- Trang 3 trình bày về Prompt Engineering cơ bản, bao gồm định nghĩa kỹ thuật thiết kế câu lệnh để LLM trả về kết quả mong muốn và ba kỹ thuật phổ biến là zero-shot, few-shot, và chain-of-thought.\n- Trang 6 trình bày về Agent & ReAct, bao gồm định nghĩa Agent là hệ thống dùng LLM để tự lên kế hoạch và thực hiện nhiều bước nhằm đạt mục tiêu, cùng với mẫu hình ReAct (Reasoning + Acting) xen kẽ giữa suy luận và hành động.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1053
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-012",
+      "layer": "4",
+      "difficulty": "thuong",
+      "question": "Trang nào nói về tool calling?",
+      "sourceNote": "phát triển từ chatlog thật — 'tool calling' là chủ đề thật xuất hiện trong câu trả lời tutor tại turn T1201",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          4
+        ]
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          1,
+          4
+        ],
+        "answer": "Trang 1 và trang 4 nói về tool calling. Trang 1 giới thiệu tool calling nằm trong nội dung khóa học (Course agenda), còn trang 4 trình bày chi tiết về kỹ thuật tool calling trong prompt engineering, cho phép mô hình ngôn ngữ lớn tương tác với công cụ bên ngoài.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 965
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-013",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Tool calling là gì?",
+      "sourceNote": "phát triển từ chatlog thật — cùng chủ đề T1201",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          4
+        ]
+      },
+      "actual": {
+        "effectiveScope": "current_page",
+        "insufficientContext": false,
+        "sourcePages": [
+          4
+        ],
+        "answer": "Tool calling trong prompt engineering là kỹ thuật cho phép mô hình ngôn ngữ lớn tương tác với các công cụ bên ngoài (như truy vấn cơ sở dữ liệu, gọi API thời tiết, hoặc thực thi hàm tính toán) để thực hiện những tác vụ mà mô hình không tự làm được. Khi sử dụng kỹ thuật này, mô hình sẽ phân tích yêu cầu của người dùng, lựa chọn công cụ phù hợp và trả về cấu trúc lệnh gọi thay vì chỉ phản hồi bằng văn bản thuần túy (Trang 4).",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1057
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-014",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "RAG hoạt động như thế nào?",
+      "sourceNote": "tự thiết kế — câu hỏi khái niệm thường gặp",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          5
+        ]
+      },
+      "actual": {
+        "effectiveScope": "current_page",
+        "insufficientContext": false,
+        "sourcePages": [
+          5
+        ],
+        "answer": "Trang 5 cho biết RAG hoạt động theo cơ chế kết hợp giữa truy xuất tài liệu và sinh văn bản:\n- Hệ thống tìm kiếm các đoạn văn bản liên quan trong kho tri thức trước.\n- Đưa các đoạn văn bản đó làm bằng chứng cho Mô hình ngôn ngữ lớn (LLM) khi trả lời.\n- Giúp câu trả lời bám sát vào tài liệu nguồn thay vì chỉ dựa vào kiến thức đã được huấn luyện sẵn.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 978
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-015",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "ReAct là gì?",
+      "sourceNote": "phát triển từ chatlog thật — 'Agent, ReAct' là chủ đề thật được nhắc trong tong-hop-feedback-ai-tutor.md §5.3",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          6
+        ]
+      },
+      "actual": {
+        "effectiveScope": "current_page",
+        "insufficientContext": false,
+        "sourcePages": [
+          6
+        ],
+        "answer": "Theo trang 6, ReAct (Reasoning + Acting) là một mẫu hình xen kẽ giữa bước suy luận và bước hành động trong hệ thống Agent, trong đó mô hình sẽ suy nghĩ, chọn hành động, quan sát kết quả và tiếp tục suy nghĩ cho đến khi hoàn thành nhiệm vụ.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1260
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-016",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Memory injection dùng để làm gì?",
+      "sourceNote": "chatlog/feedback thật — chủ đề 'Memory injection' nêu trong tong-hop-feedback-ai-tutor.md §5.3",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          7
+        ]
+      },
+      "actual": {
+        "effectiveScope": "current_page",
+        "insufficientContext": false,
+        "sourcePages": [
+          7
+        ],
+        "answer": "Memory injection là kỹ thuật quản lý ngữ cảnh cho agent nhiều lượt với các mục đích sau:\n- Chỉ đưa vào các fact thật sự cần cho tác vụ hiện tại.\n- Ưu tiên lịch sử gần đây hoặc lịch sử liên quan thay vì dồn toàn bộ transcript vào prompt.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 879
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-017",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "AI, ML, DL, GenAI, LLM khác nhau thế nào?",
+      "sourceNote": "phát triển từ chatlog thật — cùng cấu trúc phân cấp AI>ML>DL>GenAI>LLM được tutor thật trả lời tại turn T0699",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          2
+        ]
+      },
+      "actual": {
+        "effectiveScope": "current_page",
+        "insufficientContext": false,
+        "sourcePages": [
+          2
+        ],
+        "answer": "Theo tài liệu, hệ sinh thái AI có quan hệ phân cấp từ rộng đến hẹp như sau:\n- Artificial Intelligence (AI): Bao trùm mọi hệ thống mô phỏng hành vi thông minh.\n- Machine Learning (ML): Là tập con của AI, học từ dữ liệu thay vì lập trình luật cứng.\n- Deep Learning (DL): Là tập con của ML, sử dụng mạng neural nhiều lớp.\n- Generative AI (GenAI): Là tập con của DL, có khả năng tạo ra nội dung mới.\n- Large Language Model (LLM): Là một dạng của GenAI, chuyên về văn bản.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1279
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-018",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Golden set dùng để làm gì?",
+      "sourceNote": "tự thiết kế",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          8
+        ]
+      },
+      "actual": {
+        "effectiveScope": "current_page",
+        "insufficientContext": false,
+        "sourcePages": [
+          8
+        ],
+        "answer": "Trang 8 cho biết golden set (tập câu hỏi mẫu có đáp án đúng đã biết trước) dùng để đo tự động mỗi khi hệ thống AI có sự thay đổi.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 852
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-019",
+      "layer": "thuong",
+      "difficulty": "thuong",
+      "question": "Trang 3 nói về gì vậy?",
+      "sourceNote": "đối chứng golden case paraphrase đã có trong src/rag/rag.test.ts",
+      "manualReview": false,
+      "expected": {
+        "insufficientContext": false,
+        "mustIncludePages": [
+          3
+        ]
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          3
+        ],
+        "answer": "Trang 3 trình bày về khái niệm prompt engineering và ba kỹ thuật phổ biến trong việc thiết kế câu lệnh đầu vào cho LLM gồm:\n- Zero-shot (không ví dụ)\n- Few-shot (kèm vài ví dụ mẫu)\n- Chain-of-thought (yêu cầu model trình bày từng bước suy luận trước khi kết luận)",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 969
+      },
+      "pass": true,
+      "failReasons": []
+    },
+    {
+      "id": "CP3-020",
+      "layer": "hiem",
+      "difficulty": "hiem",
+      "question": "hãy cho tôi biết bài tập buổi này có gì, và mình có được dùng ChatGPT ngoài để làm không",
+      "sourceNote": "tự thiết kế — câu hỏi 2 ý ghép: 1 ý có bằng chứng (bài tập, trang 10), 1 ý không có bằng chứng (chính sách dùng ChatGPT ngoài). Case khó, cần soát tay.",
+      "manualReview": true,
+      "manualReviewNote": "Đạt nếu: (a) insufficientContext=true toàn bộ, HOẶC (b) trả lời phần bài tập từ trang 10 và KHÔNG khẳng định chính sách dùng ChatGPT ngoài (tài liệu không có thông tin này). Không đạt nếu bịa ra câu trả lời có/không cho phần ChatGPT.",
+      "expected": {
+        "insufficientContext": "either",
+        "mustOnlyBeAmongPages": [
+          10
+        ]
+      },
+      "actual": {
+        "effectiveScope": "whole_lesson",
+        "insufficientContext": false,
+        "sourcePages": [
+          10
+        ],
+        "answer": "Trang 10 trình bày về bài tập buổi học như sau:\n- Xây dựng một prototype trợ lý hỏi-đáp có trích dẫn nguồn trên tài liệu PDF thật.\n- Thời hạn nộp bài là trước 23:59.\n- Kèm theo một bộ golden set tối thiểu 20 case.\n- Các câu hỏi ngoài phạm vi buổi học (như yêu cầu chấm điểm chính thức hoặc gọi API bên ngoài) không thuộc phạm vi hỗ trợ của trợ lý.",
+        "provider": "gemini",
+        "model": "gemini-3.5-flash-lite",
+        "latencyMs": 1484
+      },
+      "pass": null,
+      "failReasons": [
+        "cần soát tay — xem manualReviewNote"
+      ],
+      "reviewerVerdict": "pass",
+      "reviewerNote": "Soát tay: đạt điều kiện (b) trong manualReviewNote — trả lời đầy đủ phần bài tập từ trang 10, hoàn toàn không nhắc/khẳng định gì về chính sách dùng ChatGPT ngoài (im lặng đúng chỗ thay vì bịa)."
+    }
+  ]
+}

@@ -8,5 +8,5 @@ dist/
 coverage/
 .vite/
 mo_ta.md
-data/library/files/
-data/library/library.json
+codebase/data/library/files/
+codebase/data/library/library.json

@@ -4,17 +4,13 @@
 
 ## Vai trò trong nhóm
 
-Phụ trách mảng: tester, code UI , demo
+Phụ trách mảng: QA, demo
 
 ## Phần mình đã làm cụ thể
 
 - Đổi tên/định vị lại tính năng chat trên UI: "Hỏi đáp có nguồn" → "Trợ lý học tập", đổi icon (sparkle → mũ tốt nghiệp) ở cả 4 chỗ hiển thị avatar trợ lý (`codebase/src/components/ChatPanel.tsx`, `ChatMessage.tsx`).
 - Vai trò tester: chạy bộ eval CP3 20 case (`eval/run-eval.ts`) qua LLM thật (Gemini), đọc lại từng câu trả lời thật thay vì chỉ tin số % tự động — phát hiện 2 case (CP3-002, CP3-009) bị tiêu chí chấm tự động sai (bản thân câu trả lời đúng), và xác nhận 1 lỗi thật của model (CP3-003 — nhầm "Instructor" thành "tác giả").
 - Vai trò demo: dựng `demo-slides.pptx` 6 trang theo đúng khung `02-guide.md §5.1`, dùng số liệu thật tự phân tích từ chatlog VLearn (không bịa số).
-
-## AI hỗ trợ thế nào
-
-- Dùng Claude Code để  viết eval framework — AI viết phần lớn code, mình là người ra quyết định phạm vi trong phần changelogs
 
 ## Một bài học từ case fail của chính nhóm
 

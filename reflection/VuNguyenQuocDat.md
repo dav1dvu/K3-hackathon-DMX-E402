@@ -1,6 +1,4 @@
-# Reflection — Vũ Nguyễn Quốc Đạt (mã HV: 01199)
-
-> Copy file này thành `reflection/VuNguyenQuocDat.md` — viết theo đúng thực tế phân công và đóng góp cá nhân cho dự án Slidewise AI Tutor (Nhóm DMX-E402).
+# Reflection — Vũ Nguyễn Quốc Đạt (mã HV: 2A202601199)
 
 ## Vai trò trong nhóm
 

@@ -1,4 +1,4 @@
-# Reflection — [Tên thành viên] (mã HV: [___])
+# Reflection — [Trần Thị Ngọc Lan] (mã HV: [2A202601385])
 
 > Copy file này thành `reflection/<ten-cua-ban>.md` và tự điền — mỗi người 1 file, viết bằng lời của chính mình. Theo `04-rubric.md — Reflection cá nhân`: chấm riêng, và **bị hỏi tại CP5/CP6 mà không giải thích được phần có tên mình → 0 điểm phần cá nhân liên quan** (vibe-coding rule) — nên đừng để AI viết hộ phần này.
 

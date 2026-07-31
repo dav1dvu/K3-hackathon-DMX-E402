@@ -2,7 +2,7 @@
 
 ## Vai trò trong nhóm
 
-Mình đóng vai trò **Product / Spec Lead** cho dự án Slidewise AI Tutor. Trọng tâm công việc của mình là chịu trách nhiệm về bài toán người dùng (Problem Statement & JTBD), khai phá dữ liệu bằng chứng (Evidence mining từ chatlog VLearn), xây dựng tài liệu thiết kế sản phẩm (`spec.md`), định nghĩa Quality Bar cùng bộ tiêu chuẩn chấp nhận (Acceptance Criteria), và xây dựng kịch bản demo (Demo Narrative) bám sát các đường đi trải nghiệm của người dùng.
+Mình đóng vai trò **Product / Spec Lead** cho dự án Slidewise AI Tutor. Trọng tâm công việc của mình là chịu trách nhiệm về bài toán người dùng (Problem Statement & JTBD), khai phá dữ liệu bằng chứng (Evidence mining từ chatlog VLearn), xây dựng tài liệu thiết kế sản phẩm (`spec.md`), định nghĩa Quality Bar cùng bộ tiêu chuẩn chấp nhận, và xây dựng kịch bản demo bám sát các đường đi trải nghiệm của người dùng.
 
 ## Phần mình đã làm cụ thể
 
@@ -29,7 +29,7 @@ Mình đóng vai trò **Product / Spec Lead** cho dự án Slidewise AI Tutor. T
 
 - **Tự kiểm tra & Sửa đổi (Không tin AI 100%)**:
   - Con số đếm từ script AI: Mình tự mở file CSV ra kiểm tra lại mẫu 20 dòng ngẫu nhiên để xác nhận logic đếm `citations: []` và các mẫu câu xin lỗi của chatbot ("rất tiếc", "không thể tự động tổng hợp") không bị bắt nhầm/trùng lặp.
-  - Định nghĩa Quality Bar: Ban đầu AI đề xuất Quality Bar lỏng lẻo (chỉ cần đạt 70% accuracy tổng thể). Mình chủ động bác bỏ và tự viết lại tiêu chuẩn nghiêm ngặt: **Phải đạt ≥80% VÀ Zero-Tolerance cho lỗi suy diễn sai nguồn**, vì đối với sản phẩm giáo dục, câu trả lời sai nguồn kiến thức gây hại nghiêm trọng đến lòng tin của học viên.
+  - Định nghĩa Quality Bar: Ban đầu AI đề xuất Quality Bar lỏng lẻo (chỉ cần đạt 70% accuracy tổng thể). Mình chủ động bác bỏ và tự viết lại tiêu chuẩn nghiêm ngặt: **Phải đạt ≥80% và Zero-Tolerance cho lỗi suy diễn sai nguồn**, vì đối với sản phẩm giáo dục, câu trả lời sai nguồn kiến thức gây hại nghiêm trọng đến lòng tin của học viên.
   - Trích dẫn quote nguyên văn: AI tự sinh trích dẫn thường bịa nội dung quote. Mình tự tra đúng `message_id` trong file chatlog gốc để chép nguyên văn câu hỏi và câu trả lời thật vào spec.
 
 ## Một bài học từ case fail của chính nhóm
@@ -39,7 +39,7 @@ Bài học xương máu nhất đến từ kết quả chạy Eval CP3 trên 20 
 - **Tình huống fail**: Ở case CP3-003, khi được hỏi *"Trang 1 tác giả của tài liệu là ai?"*, trong khi slide PDF trang 1 chỉ ghi *"Instructor: Minh Tran"*. Model (`gemini-3.5-flash-lite`) đã tự suy diễn *"Instructor"* đồng nghĩa với *"tác giả"* và tự tin khẳng định thẳng *"Trang 1: Tác giả là Minh Tran"*.
 - **Hậu quả**: Mặc dù sau khi soát tay bộ eval, tỉ lệ pass của nhóm đạt **17/18 case (94,4%)** — vượt xa ngưỡng 80%, nhưng vì vi phạm đúng 1 lỗi **Zero-Tolerance lớp ① (suy diễn khẳng định điều tài liệu không nói trực tiếp)** nên Quality Gate của toàn nhóm vẫn bị đánh giá **FAIL**.
 - **Bài học rút ra**:
-  1. **Trích dẫn đúng trang không đồng nghĩa với nội dung đúng (Citation alignment ≠ Semantic accuracy)**. Model có thể trích dẫn đúng trang 1, trả lời rất mạch lạc tự tin, nhưng vẫn đang tự bịa/suy diễn thêm khái niệm mà tài liệu không hề phát biểu.
+  1. **Trích dẫn đúng trang không đồng nghĩa với nội dung đúng**. Model có thể trích dẫn đúng trang 1, trả lời rất mạch lạc tự tin, nhưng vẫn đang tự bịa/suy diễn thêm khái niệm mà tài liệu không hề phát biểu.
   2. **Bài học làm Product / Spec**: Khi viết System Prompt và thiết kế Guardrail, không được chỉ dặn AI "hãy trích dẫn số trang", mà phải bắt buộc quy tắc nghiêm ngặt: Phân biệt rõ thông tin *khẳng định trực tiếp* và *thông tin suy luận*. Nếu tài liệu chỉ ghi "Instructor", AI phải trả lời *"Tài liệu không ghi rõ tác giả, chỉ ghi Instructor là Minh Tran"* hoặc báo `insufficientContext=true` chứ tuyệt đối không được tự ý gán ghép khái niệm.
 
 ## Điều mình sẽ cải thiện nếu có thêm thời gian
